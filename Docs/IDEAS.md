@@ -33,7 +33,7 @@ inputs with LLM-powered refinement.
    - **Long press** on card toggles refined ↔ original.\
    - Clicking the card copies the prompt text.
 3. **API Key**
-   - User provides their own LLM API key (OpenAI, Anthropic, etc.).\
+   - User provides their own LLM API key (OPENROUTER, GEMINI).\
    - Stored in `localStorage` so it persists between sessions.
 
 ------------------------------------------------------------------------
