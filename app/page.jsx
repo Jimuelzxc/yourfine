@@ -131,9 +131,9 @@ export default function Home() {
     <div className="h-screen flex flex-col bg-[#282828]">
       {/* Navigation Header */}
       <div className="">
-        <div className="wrapper flex justify-between items-center py-[80px] px-4 sm:px-8 md:px-16 lg:px-32 xl:px-[550px]">
+        <div className="wrapper flex justify-between items-center py-[80px] px-4 sm:px-8 md:px-16 lg:px-32 xl:px-[550px] mx-4">
           <div className="flex items-center gap-2 sm:gap-4">
-            <h1 className="text-[1.2em] sm:text-[1.5em] z-20 flex items-center">yourfine</h1>
+            <h1 className="text-[1.2em] sm:text-[1.5em] z-20 flex items-center">rfine</h1>
             
             {prompts.length > 0 && (
               <div className="text-[0.8em] sm:text-[0.9em] opacity-70 bg-[#3B3B3B] px-2 sm:px-3 py-1 rounded-full">

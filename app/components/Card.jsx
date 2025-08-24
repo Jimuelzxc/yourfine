@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { PiCopyBold, PiCheckBold, PiSwapBold, PiTrashBold } from 'react-icons/pi';
+import { PiCopyBold, PiCheckBold, PiSwapBold } from 'react-icons/pi';
 
 function Card({ prompt, isLatest = false, onDelete }) {
   const [showRefined, setShowRefined] = useState(!!prompt?.refined);
@@ -210,14 +210,18 @@ function Card({ prompt, isLatest = false, onDelete }) {
   return (
     <>
       <div
-        className={`w-full rounded-[5px] p-3 sm:p-4 py-4 sm:py-6 cursor-pointer transition-all duration-200 relative group ${isDragging ? 'select-none' : ''} ${
+        className={`w-full rounded-[5px] p-3 sm:p-4 py-4 sm:py-6 cursor-pointer transition-all duration-200 relative group select-none ${isDragging ? '' : ''} ${
           isLatest 
             ? 'bg-[#404040] border-2 border-[#606060] opacity-100 shadow-md latest-prompt' 
             : 'bg-[#3B3B3B] border-2 border-[#424242] opacity-40 hover:opacity-70 hover:border-[#4a4a4a]'
         }`}
         style={{
           transform: `translateX(${swipeOffset}px)`,
-          transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+          transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          MozUserSelect: 'none',
+          msUserSelect: 'none'
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -232,15 +236,18 @@ function Card({ prompt, isLatest = false, onDelete }) {
         {/* Delete background indicator - positioned behind the card */}
         {swipeOffset > 0 && (
           <div 
-            className="absolute inset-y-0 left-0 bg-red-500/30 flex items-center justify-start pl-4 pointer-events-none z-0"
+            className="absolute inset-y-0 left-0 bg-red-600/60 flex items-center justify-start pl-4 pointer-events-none z-0"
             style={{
               width: `${swipeOffset}px`,
-              opacity: Math.min(swipeOffset / 50, 1)
+              opacity: Math.min(swipeOffset / 30, 1)
             }}
           >
-            <div className="flex items-center gap-2 text-red-400">
-              <PiTrashBold className="text-lg" />
-              {swipeOffset > 80 && <span className="text-sm font-medium whitespace-nowrap">Release to delete</span>}
+            <div className="flex items-center gap-2 text-white drop-shadow-lg">
+              {swipeOffset > 80 && (
+                <span className="text-sm font-bold whitespace-nowrap bg-red-700/80 px-2 py-1 rounded backdrop-blur-sm">
+                  Release to delete
+                </span>
+              )}
             </div>
           </div>
         )}
