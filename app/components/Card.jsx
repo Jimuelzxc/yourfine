@@ -1,18 +1,42 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { PiCopyBold, PiCheckBold, PiSwapBold, PiBookmarkSimpleBold } from 'react-icons/pi';
 
-function Card({ prompt, isLatest = false, onDelete, onSave }) {
+function Card({ prompt, isLatest = false, isQueued = false, onDelete, onSave, onQueueForDeletion }) {
   const [showRefined, setShowRefined] = useState(!!prompt?.refined);
   const [copied, setCopied] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState(null); // 'left' or 'right'
+  const [isModifierPressed, setIsModifierPressed] = useState(false);
   const longPressTimer = useRef(null);
   const isLongPress = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const swipeStartTime = useRef(0);
   const hasSwipeStarted = useRef(false);
+
+  // Track modifier keys for multi-swipe
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        setIsModifierPressed(true);
+      }
+    };
+
+    const handleKeyUp = (e) => {
+      if (!e.ctrlKey && !e.metaKey) {
+        setIsModifierPressed(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
 
   // Handle copy to clipboard
   const handleCopy = async (e) => {
@@ -36,6 +60,9 @@ function Card({ prompt, isLatest = false, onDelete, onSave }) {
     hasSwipeStarted.current = false;
     dragStart.current = { x: e.clientX, y: e.clientY };
     swipeStartTime.current = Date.now();
+    
+    // Update modifier state based on current event
+    setIsModifierPressed(e.ctrlKey || e.metaKey);
     
     longPressTimer.current = setTimeout(() => {
       isLongPress.current = true;
@@ -88,10 +115,16 @@ function Card({ prompt, isLatest = false, onDelete, onSave }) {
       const swipeThreshold = 100;
       
       if (swipeDirection === 'right' && swipeOffset > swipeThreshold) {
-        // Show delete confirmation
-        setShowDeleteConfirm(true);
+        // Right swipe - delete action
+        if (isModifierPressed && onQueueForDeletion) {
+          // Multi-swipe mode: add to deletion queue
+          onQueueForDeletion(prompt.id);
+        } else {
+          // Normal mode: show delete confirmation
+          setShowDeleteConfirm(true);
+        }
       } else if (swipeDirection === 'left' && Math.abs(swipeOffset) > swipeThreshold) {
-        // Trigger save action immediately
+        // Left swipe - save action (always immediate)
         if (onSave) {
           onSave(prompt.id);
         }
@@ -167,6 +200,8 @@ function Card({ prompt, isLatest = false, onDelete, onSave }) {
       const swipeThreshold = 100;
       
       if (swipeDirection === 'right' && swipeOffset > swipeThreshold) {
+        // For touch devices, we'll use a different approach for multi-select
+        // For now, default to single deletion
         setShowDeleteConfirm(true);
       } else if (swipeDirection === 'left' && Math.abs(swipeOffset) > swipeThreshold) {
         if (onSave) {
@@ -240,9 +275,11 @@ function Card({ prompt, isLatest = false, onDelete, onSave }) {
     <>
       <div
         className={`w-full rounded-[5px] p-3 sm:p-4 py-4 sm:py-6 cursor-pointer transition-all duration-200 relative group select-none ${isDragging ? '' : ''} ${
-          isLatest 
-            ? 'bg-[#404040] border-2 border-[#606060] opacity-100 shadow-md latest-prompt' 
-            : 'bg-[#3B3B3B] border-2 border-[#424242] opacity-40 hover:opacity-70 hover:border-[#4a4a4a]'
+          isQueued
+            ? 'bg-red-500/20 border-2 border-red-500/50 opacity-80'
+            : isLatest 
+              ? 'bg-[#404040] border-2 border-[#606060] opacity-100 shadow-md latest-prompt' 
+              : 'bg-[#3B3B3B] border-2 border-[#424242] opacity-40 hover:opacity-70 hover:border-[#4a4a4a]'
         }`}
         style={{
           transform: `translateX(${swipeOffset}px)`,
@@ -294,7 +331,7 @@ function Card({ prompt, isLatest = false, onDelete, onSave }) {
             <div className="flex items-center gap-2 text-white drop-shadow-lg">
               {swipeOffset > 80 && (
                 <span className="text-sm font-bold whitespace-nowrap bg-red-700/80 px-2 py-1 rounded backdrop-blur-sm">
-                  Release to delete
+                  {isModifierPressed ? 'Add to queue' : 'Release to delete'}
                 </span>
               )}
             </div>
@@ -311,6 +348,11 @@ function Card({ prompt, isLatest = false, onDelete, onSave }) {
               {isLatest && (
                 <span className="bg-blue-500 text-white text-[0.65em] sm:text-[0.7em] px-1.5 sm:px-2 py-0.5 rounded-full font-medium">
                   Latest
+                </span>
+              )}
+              {isQueued && (
+                <span className="bg-red-500 text-white text-[0.65em] sm:text-[0.7em] px-1.5 sm:px-2 py-0.5 rounded-full font-medium">
+                  Queued
                 </span>
               )}
             </div>

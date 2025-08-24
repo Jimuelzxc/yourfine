@@ -26,6 +26,8 @@ export default function Home() {
   const [activeSessionId, setActiveSessionIdState] = useState('default');
   const [showSavedOnly, setShowSavedOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [deletionQueue, setDeletionQueue] = useState(new Set());
+  const [showBatchConfirm, setShowBatchConfirm] = useState(false);
   const cardsContainerRef = useRef(null);
 
   // Initialize sessions and migrate old data if needed
@@ -132,6 +134,55 @@ export default function Home() {
     }
   };
 
+  // Handle queuing prompts for batch deletion
+  const handleQueueForDeletion = (promptId) => {
+    setDeletionQueue(prev => {
+      const newQueue = new Set(prev);
+      if (newQueue.has(promptId)) {
+        newQueue.delete(promptId);
+      } else {
+        newQueue.add(promptId);
+      }
+      return newQueue;
+    });
+  };
+
+  // Handle batch deletion confirmation
+  const handleBatchDelete = () => {
+    if (deletionQueue.size > 0) {
+      setShowBatchConfirm(true);
+    }
+  };
+
+  // Execute batch deletion
+  const executeBatchDeletion = () => {
+    deletionQueue.forEach(promptId => {
+      deletePromptFromSession(activeSessionId, promptId);
+    });
+    
+    // Refresh prompts after batch deletion
+    const updatedPrompts = getSessionPrompts(activeSessionId);
+    setPrompts(updatedPrompts);
+    
+    // Update session list to reflect new prompt count
+    const updatedSessionList = getSessionList();
+    setSessions(updatedSessionList);
+    
+    // Clear queue and close confirmation
+    setDeletionQueue(new Set());
+    setShowBatchConfirm(false);
+  };
+
+  // Cancel batch deletion
+  const cancelBatchDeletion = () => {
+    setShowBatchConfirm(false);
+  };
+
+  // Clear deletion queue
+  const clearDeletionQueue = () => {
+    setDeletionQueue(new Set());
+  };
+
   const handleSettingsClose = () => {
     setShowSettings(false);
     // Trigger TextArea refresh by updating key
@@ -191,6 +242,34 @@ export default function Home() {
       <div className="flex-1">
         <div className="mx-4 sm:mx-8 md:mx-16 lg:mx-32 xl:mx-[550px] flex flex-col items-center gap-4 h-full px-4">
           <div className="w-full relative" id="wrapper-cards">
+            {/* Batch Deletion Queue UI */}
+            {deletionQueue.size > 0 && (
+              <div className="mb-3 p-3 bg-red-500/10 border border-red-400/30 rounded-[8px] flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="text-red-400 text-[0.9em] font-medium">
+                    {deletionQueue.size} prompt{deletionQueue.size !== 1 ? 's' : ''} queued for deletion
+                  </div>
+                  <div className="text-[0.8em] text-gray-400">
+                    Hold Ctrl/Cmd + swipe to add more
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={clearDeletionQueue}
+                    className="px-3 py-1.5 text-[0.8em] text-gray-400 hover:text-white bg-transparent hover:bg-white/10 rounded transition-colors"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    onClick={handleBatchDelete}
+                    className="px-3 py-1.5 text-[0.8em] text-white bg-red-600 hover:bg-red-700 rounded transition-colors font-medium"
+                  >
+                    Delete All
+                  </button>
+                </div>
+              </div>
+            )}
+            
             {/* Search Input */}
             {prompts.length > 0 && (
               <div className="mb-3">
@@ -298,13 +377,16 @@ export default function Home() {
                 // Display filtered prompts (oldest to newest)
                 filteredPrompts.map((prompt, index) => {
                   const isLatest = !showSavedOnly && index === filteredPrompts.length - 1; // Only show latest badge when not filtering
+                  const isQueued = deletionQueue.has(prompt.id);
                   return (
                     <Card 
                       key={prompt.id} 
                       prompt={prompt} 
                       isLatest={isLatest}
+                      isQueued={isQueued}
                       onDelete={handleDeletePrompt}
                       onSave={handleSavePrompt}
+                      onQueueForDeletion={handleQueueForDeletion}
                     />
                   );
                 })
@@ -340,6 +422,35 @@ export default function Home() {
         isOpen={showSettings}
         onClose={handleSettingsClose}
       />
+      
+      {/* Batch Deletion Confirmation Modal */}
+      {showBatchConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#2a2a2a] border border-[#404040] rounded-lg p-6 max-w-sm w-full">
+            <h3 className="text-lg font-medium text-white mb-2">Delete Multiple Prompts?</h3>
+            <p className="text-gray-300 text-sm mb-4">
+              You are about to delete <span className="font-medium text-red-400">{deletionQueue.size}</span> prompt{deletionQueue.size !== 1 ? 's' : ''}. This action cannot be undone.
+            </p>
+            <div className="text-[0.8em] text-gray-400 mb-6">
+              Queued prompts will be permanently removed from this session.
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelBatchDeletion}
+                className="px-4 py-2 bg-[#404040] hover:bg-[#4a4a4a] text-white rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeBatchDeletion}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors font-medium"
+              >
+                Delete {deletionQueue.size} Prompt{deletionQueue.size !== 1 ? 's' : ''}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
