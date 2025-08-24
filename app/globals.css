@@ -67,3 +67,17 @@ textarea {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+/* Subtle pulse animation for latest prompt */
+@keyframes subtle-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(96, 96, 96, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgba(96, 96, 96, 0.1);
+  }
+}
+
+.latest-prompt {
+  animation: subtle-pulse 3s ease-in-out infinite;
+}

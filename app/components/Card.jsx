@@ -69,8 +69,10 @@ function Card({ prompt, isLatest = false }) {
 
   return (
     <div
-      className={`bg-[#3B3B3B] border-2 border-[#424242] w-full rounded-[5px] p-4 py-6 cursor-pointer transition-all duration-100 relative group ${
-        isLatest ? 'opacity-100 border-[#505050]' : 'opacity-70 hover:opacity-100'
+      className={`w-full rounded-[5px] p-4 py-6 cursor-pointer transition-all duration-200 relative group ${
+        isLatest 
+          ? 'bg-[#404040] border-2 border-[#606060] opacity-100 shadow-md latest-prompt' 
+          : 'bg-[#3B3B3B] border-2 border-[#424242] opacity-40 hover:opacity-70 hover:border-[#4a4a4a]'
       }`}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
@@ -79,28 +81,45 @@ function Card({ prompt, isLatest = false }) {
       title={hasRefined ? "Long press to toggle between original and refined" : "Click to copy"}
     >
       <div className="flex justify-between items-start mb-2">
-        <div className="text-[0.9em] opacity-50">{prompt.createdAt}</div>
+        <div className="flex items-center gap-2">
+          <div className={`text-[0.9em] ${
+            isLatest ? 'opacity-70 text-gray-300' : 'opacity-50 text-gray-400'
+          }`}>{prompt.createdAt}</div>
+          {isLatest && (
+            <span className="bg-blue-500 text-white text-[0.7em] px-2 py-0.5 rounded-full font-medium">
+              Latest
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           {hasRefined && (
-            <div className="flex items-center gap-1 text-[0.8em] opacity-70">
+            <div className={`flex items-center gap-1 text-[0.8em] ${
+              isLatest ? 'opacity-80 text-gray-300' : 'opacity-70 text-gray-400'
+            }`}>
               <PiSwapBold />
               <span>{showRefined ? 'Refined' : 'Original'}</span>
             </div>
           )}
-          <div className="text-[0.8em] opacity-70">
+          <div className={`text-[0.8em] ${
+            isLatest ? 'opacity-80 text-gray-300' : 'opacity-70 text-gray-400'
+          }`}>
             {copied ? <PiCheckBold className="text-green-400" /> : <PiCopyBold />}
           </div>
         </div>
       </div>
       
-      <p className="text-[1.1em] leading-relaxed">
+      <p className={`text-[1.1em] leading-relaxed ${
+        isLatest ? 'text-white' : 'text-gray-200'
+      }`}>
         {displayText}
       </p>
       
       {hasRefined && (
         <div className="absolute top-2 right-2">
           <div className={`w-2 h-2 rounded-full ${
-            showRefined ? 'bg-blue-400' : 'bg-yellow-400'
+            showRefined 
+              ? (isLatest ? 'bg-blue-400 shadow-sm' : 'bg-blue-400') 
+              : (isLatest ? 'bg-yellow-400 shadow-sm' : 'bg-yellow-400')
           }`} />
         </div>
       )}
