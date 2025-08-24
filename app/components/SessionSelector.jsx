@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { PiCaretDownBold, PiPlusBold, PiTrashBold, PiPencilBold, PiCheckBold, PiXBold } from 'react-icons/pi';
+import { PiCaretDownBold, PiPlusBold, PiTrashBold, PiPencilBold, PiCheckBold, PiXBold, PiDownloadBold, PiUploadBold } from 'react-icons/pi';
 
 function SessionSelector({ 
   sessions, 
@@ -7,13 +7,16 @@ function SessionSelector({
   onSessionChange, 
   onCreateSession, 
   onRenameSession, 
-  onDeleteSession 
+  onDeleteSession,
+  onExportSession,
+  onImportSession
 }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [editingName, setEditingName] = useState('');
   const dropdownRef = useRef(null);
   const editInputRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -76,6 +79,26 @@ function SessionSelector({
     }
   };
 
+  const handleExportSession = (sessionId, e) => {
+    e.stopPropagation();
+    if (onExportSession) {
+      onExportSession(sessionId);
+    }
+  };
+
+  const handleImportSession = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && onImportSession) {
+      onImportSession(file);
+    }
+    // Reset file input
+    e.target.value = '';
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       handleSaveEdit(e);
@@ -109,6 +132,24 @@ function SessionSelector({
             <PiPlusBold className="text-[0.8em] text-blue-400" />
             <span className="text-blue-400">Create New Session</span>
           </button>
+
+          {/* Import Session */}
+          <button
+            onClick={handleImportSession}
+            className="w-full text-left px-3 py-2 hover:bg-[#404040] transition-colors border-b border-[#404040] flex items-center gap-2 text-[0.9em]"
+          >
+            <PiUploadBold className="text-[0.8em] text-green-400" />
+            <span className="text-green-400">Import Session</span>
+          </button>
+
+          {/* Hidden File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleFileChange}
+            className="hidden"
+          />
 
           {/* Session List */}
           {sessions.map((session) => (
@@ -166,6 +207,13 @@ function SessionSelector({
                     
                     {/* Session Actions */}
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => handleExportSession(session.id, e)}
+                        className="text-gray-400 hover:text-green-400 text-[0.8em] p-1"
+                        title="Export Session"
+                      >
+                        <PiDownloadBold />
+                      </button>
                       <button
                         onClick={(e) => handleStartEdit(session, e)}
                         className="text-gray-400 hover:text-white text-[0.8em] p-1"

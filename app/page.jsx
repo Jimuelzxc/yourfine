@@ -14,7 +14,9 @@ import {
   loadSessions, getActiveSessionId, setActiveSessionId, getActiveSession,
   createSession, renameSession, deleteSession, addPromptToSession,
   getSessionPrompts, updateSessionPromptRefinement, migratePromptsToSessions,
-  getSessionList, deletePromptFromSession, savePromptToSession
+  getSessionList, deletePromptFromSession, savePromptToSession,
+  // Export/Import functions
+  exportSession, importSession
 } from "./utils/localStorage";
 
 export default function Home() {
@@ -118,6 +120,32 @@ export default function Home() {
       // If we deleted the active session, switch to the new active one
       const newActiveId = getActiveSessionId();
       setActiveSessionIdState(newActiveId);
+    }
+  };
+
+  const handleExportSession = (sessionId) => {
+    const success = exportSession(sessionId);
+    if (success) {
+      console.log('Session exported successfully');
+    } else {
+      alert('Failed to export session. Please try again.');
+    }
+  };
+
+  const handleImportSession = async (file) => {
+    try {
+      const result = await importSession(file);
+      
+      // Update sessions list
+      const updatedSessionList = getSessionList();
+      setSessions(updatedSessionList);
+      
+      // Switch to the imported session
+      handleSessionChange(result.sessionId);
+      
+      alert(`Session "${result.session.name}" imported successfully with ${result.session.prompts.length} prompts!`);
+    } catch (error) {
+      alert(`Import failed: ${error.message}`);
     }
   };
 
@@ -393,6 +421,8 @@ export default function Home() {
             onCreateSession={handleCreateSession}
             onRenameSession={handleRenameSession}
             onDeleteSession={handleDeleteSession}
+            onExportSession={handleExportSession}
+            onImportSession={handleImportSession}
           />
         </div>
       </div>

@@ -12,7 +12,9 @@ function TextArea({
   onSessionChange,
   onCreateSession,
   onRenameSession,
-  onDeleteSession
+  onDeleteSession,
+  onExportSession,
+  onImportSession
 }) {
   const [prompt, setPrompt] = useState('');
   const [apiKey, setApiKey] = useState('');
@@ -163,6 +165,8 @@ function TextArea({
             onCreateSession={onCreateSession}
             onRenameSession={onRenameSession}
             onDeleteSession={onDeleteSession}
+            onExportSession={onExportSession}
+            onImportSession={onImportSession}
           />
           
           {/* Status Indicators */}

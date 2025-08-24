@@ -383,3 +383,101 @@ export const getSessionList = () => {
     return new Date(b.lastModified) - new Date(a.lastModified);
   });
 };
+
+// === SESSION EXPORT/IMPORT FUNCTIONS ===
+
+// Export a session to JSON file
+export const exportSession = (sessionId) => {
+  try {
+    const sessions = loadSessions();
+    const session = sessions[sessionId];
+    
+    if (!session) {
+      throw new Error(`Session ${sessionId} not found`);
+    }
+    
+    // Create export data with metadata
+    const exportData = {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      session: {
+        name: session.name,
+        prompts: session.prompts,
+        createdAt: session.createdAt,
+        lastModified: session.lastModified
+      }
+    };
+    
+    // Create and download file
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: 'application/json'
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${session.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_session.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    return true;
+  } catch (error) {
+    console.error('Error exporting session:', error);
+    return false;
+  }
+};
+
+// Import a session from JSON file
+export const importSession = (file) => {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      reject(new Error('No file provided'));
+      return;
+    }
+    
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      try {
+        const importData = JSON.parse(e.target.result);
+        
+        // Validate import data structure
+        if (!importData.session || !importData.session.name || !Array.isArray(importData.session.prompts)) {
+          throw new Error('Invalid session file format');
+        }
+        
+        const sessions = loadSessions();
+        
+        // Generate new session ID to avoid conflicts
+        const newSessionId = generateSessionId();
+        
+        // Create imported session
+        const importedSession = {
+          id: newSessionId,
+          name: `${importData.session.name} (Imported)`,
+          prompts: importData.session.prompts || [],
+          createdAt: new Date().toISOString(),
+          lastModified: new Date().toISOString()
+        };
+        
+        // Add to sessions
+        sessions[newSessionId] = importedSession;
+        saveSessions(sessions);
+        
+        resolve({
+          sessionId: newSessionId,
+          session: importedSession
+        });
+      } catch (error) {
+        reject(new Error(`Failed to import session: ${error.message}`));
+      }
+    };
+    
+    reader.onerror = () => {
+      reject(new Error('Failed to read file'));
+    };
+    
+    reader.readAsText(file);
+  });
+};
