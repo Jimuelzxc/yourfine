@@ -231,12 +231,6 @@ export default function Home() {
         <div className="wrapper flex justify-between items-center py-[80px] px-4 sm:px-8 md:px-16 lg:px-32 xl:px-[550px] mx-4">
           <div className="flex items-center gap-2 sm:gap-4">
             <h1 className="text-[1.2em] sm:text-[1.5em] z-20 flex items-center">rfine</h1>
-            
-            {prompts.length > 0 && (
-              <div className="text-[0.8em] sm:text-[0.9em] opacity-70 bg-[#3B3B3B] px-2 sm:px-3 py-1 rounded-full">
-                {prompts.length} prompt{prompts.length !== 1 ? 's' : ''}
-              </div>
-            )}
           </div>
           
           {/* Settings Button */}
@@ -318,7 +312,7 @@ export default function Home() {
             {/* Saves Filter Toggle */}
             {prompts.length > 0 && (
               <div className="flex justify-between items-center mb-3">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center">
                   <button
                     onClick={() => setShowSavedOnly(!showSavedOnly)}
                     className={`group relative hover:bg-white/10 p-2 rounded-[8px] transition-all duration-200 flex items-center justify-center w-[40px] h-[40px] flex-shrink-0 hover:scale-105 active:scale-95 cursor-pointer ${
@@ -332,27 +326,10 @@ export default function Home() {
                       showSavedOnly ? 'fill-current' : ''
                     }`} />
                   </button>
-                  
-                  {showSavedOnly && (
-                    <div className="text-[0.8em] sm:text-[0.9em] opacity-70 bg-orange-500/20 text-orange-300 px-2 sm:px-3 py-1 rounded-full border border-orange-400/30">
-                      {filteredPrompts.length} saved prompt{filteredPrompts.length !== 1 ? 's' : ''}
-                    </div>
-                  )}
-                  
-                  {!showSavedOnly && savedCount > 0 && (
-                    <div className="text-[0.8em] sm:text-[0.9em] opacity-50 text-gray-400">
-                      {savedCount} saved
-                    </div>
-                  )}
                 </div>
                 
-                <div className="text-[0.8em] sm:text-[0.9em] opacity-50 text-gray-400">
-                  {searchQuery 
-                    ? `${searchResultsCount} result${searchResultsCount !== 1 ? 's' : ''}` 
-                    : showSavedOnly 
-                      ? 'Saved only' 
-                      : 'All prompts'
-                  }
+                <div className="text-[0.8em] sm:text-[0.9em] opacity-70 px-2 sm:px-3 py-1">
+                  {showSavedOnly ? savedCount : prompts.length} prompt{(showSavedOnly ? savedCount : prompts.length) !== 1 ? 's' : ''}
                 </div>
               </div>
             )}
