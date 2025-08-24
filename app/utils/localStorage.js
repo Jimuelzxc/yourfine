@@ -304,6 +304,30 @@ export const migratePromptsToSessions = () => {
   }
 };
 
+// Delete prompt from specific session
+export const deletePromptFromSession = (sessionId, promptId) => {
+  const sessions = loadSessions();
+  
+  if (!sessions[sessionId]) {
+    console.error(`Session ${sessionId} not found`);
+    return null;
+  }
+  
+  const initialLength = sessions[sessionId].prompts.length;
+  sessions[sessionId].prompts = sessions[sessionId].prompts.filter(prompt => 
+    prompt.id !== promptId
+  );
+  
+  // Check if prompt was actually deleted
+  if (sessions[sessionId].prompts.length < initialLength) {
+    sessions[sessionId].lastModified = new Date().toISOString();
+    saveSessions(sessions);
+    return sessions[sessionId].prompts;
+  }
+  
+  return null; // Prompt not found
+};
+
 // Get all session names and IDs for UI
 export const getSessionList = () => {
   const sessions = loadSessions();

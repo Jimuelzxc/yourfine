@@ -1,16 +1,22 @@
 import { useState, useRef } from 'react';
-import { PiCopyBold, PiCheckBold, PiSwapBold } from 'react-icons/pi';
+import { PiCopyBold, PiCheckBold, PiSwapBold, PiTrashBold } from 'react-icons/pi';
 
-function Card({ prompt, isLatest = false }) {
+function Card({ prompt, isLatest = false, onDelete }) {
   const [showRefined, setShowRefined] = useState(!!prompt?.refined);
   const [copied, setCopied] = useState(false);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const longPressTimer = useRef(null);
   const isLongPress = useRef(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const swipeStartTime = useRef(0);
+  const hasSwipeStarted = useRef(false);
 
   // Handle copy to clipboard
   const handleCopy = async (e) => {
     e.stopPropagation();
-    if (isLongPress.current) return;
+    if (isLongPress.current || isDragging) return;
 
     const textToCopy = showRefined && prompt?.refined ? prompt.refined : prompt?.original || '';
     
@@ -23,33 +29,167 @@ function Card({ prompt, isLatest = false }) {
     }
   };
 
-  // Handle long press for toggle
-  const handleMouseDown = () => {
+  // Handle swipe gestures
+  const handleMouseDown = (e) => {
     isLongPress.current = false;
+    hasSwipeStarted.current = false;
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    swipeStartTime.current = Date.now();
+    
     longPressTimer.current = setTimeout(() => {
       isLongPress.current = true;
-      if (prompt?.refined) {
+      if (prompt?.refined && !isDragging) {
         setShowRefined(prev => !prev);
       }
     }, 500); // 500ms for long press
   };
 
-  const handleMouseUp = () => {
+  const handleMouseMove = (e) => {
+    if (!dragStart.current.x) return;
+    
+    const deltaX = e.clientX - dragStart.current.x;
+    const deltaY = e.clientY - dragStart.current.y;
+    
+    // Only start horizontal swipe if movement is more horizontal than vertical
+    if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      hasSwipeStarted.current = true;
+      setIsDragging(true);
+      
+      // Clear long press timer when swiping
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+      
+      // Only allow right swipe (positive deltaX)
+      if (deltaX > 0) {
+        const maxSwipe = 150;
+        const clampedOffset = Math.min(deltaX, maxSwipe);
+        setSwipeOffset(clampedOffset);
+      }
+    }
+  };
+
+  const handleMouseUp = (e) => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
     }
+    
+    if (isDragging && hasSwipeStarted.current) {
+      const swipeThreshold = 100;
+      
+      if (swipeOffset > swipeThreshold) {
+        // Show delete confirmation
+        setShowDeleteConfirm(true);
+      }
+      
+      // Reset swipe state
+      setSwipeOffset(0);
+      setIsDragging(false);
+    }
+    
+    dragStart.current = { x: 0, y: 0 };
+    hasSwipeStarted.current = false;
+  };
+
+  // Touch event handlers for mobile
+  const handleTouchStart = (e) => {
+    const touch = e.touches[0];
+    isLongPress.current = false;
+    hasSwipeStarted.current = false;
+    dragStart.current = { x: touch.clientX, y: touch.clientY };
+    swipeStartTime.current = Date.now();
+    
+    longPressTimer.current = setTimeout(() => {
+      isLongPress.current = true;
+      if (prompt?.refined && !isDragging) {
+        setShowRefined(prev => !prev);
+      }
+    }, 500);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!dragStart.current.x) return;
+    
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - dragStart.current.x;
+    const deltaY = touch.clientY - dragStart.current.y;
+    
+    // Only start horizontal swipe if movement is more horizontal than vertical
+    if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      e.preventDefault(); // Prevent scrolling
+      hasSwipeStarted.current = true;
+      setIsDragging(true);
+      
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+      
+      // Only allow right swipe
+      if (deltaX > 0) {
+        const maxSwipe = 150;
+        const clampedOffset = Math.min(deltaX, maxSwipe);
+        setSwipeOffset(clampedOffset);
+      }
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
+    
+    if (isDragging && hasSwipeStarted.current) {
+      const swipeThreshold = 100;
+      
+      if (swipeOffset > swipeThreshold) {
+        setShowDeleteConfirm(true);
+      }
+      
+      setSwipeOffset(0);
+      setIsDragging(false);
+    }
+    
+    dragStart.current = { x: 0, y: 0 };
+    hasSwipeStarted.current = false;
   };
 
   const handleMouseLeave = () => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
     }
+    
+    // Reset swipe if mouse leaves
+    if (isDragging) {
+      setSwipeOffset(0);
+      setIsDragging(false);
+      dragStart.current = { x: 0, y: 0 };
+      hasSwipeStarted.current = false;
+    }
+  };
+
+  // Handle deletion
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(prompt.id);
+    }
+    setShowDeleteConfirm(false);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false);
   };
 
   // Handle click (copy if not long press)
   const handleClick = (e) => {
+    if (showDeleteConfirm) {
+      e.stopPropagation();
+      return;
+    }
+    
     setTimeout(() => {
-      if (!isLongPress.current) {
+      if (!isLongPress.current && !isDragging) {
         handleCopy(e);
       }
     }, 0);
@@ -68,62 +208,117 @@ function Card({ prompt, isLatest = false }) {
   const hasRefined = Boolean(prompt.refined);
 
   return (
-    <div
-      className={`w-full rounded-[5px] p-3 sm:p-4 py-4 sm:py-6 cursor-pointer transition-all duration-200 relative group ${
-        isLatest 
-          ? 'bg-[#404040] border-2 border-[#606060] opacity-100 shadow-md latest-prompt' 
-          : 'bg-[#3B3B3B] border-2 border-[#424242] opacity-40 hover:opacity-70 hover:border-[#4a4a4a]'
-      }`}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseLeave}
-      onClick={handleClick}
-      title={hasRefined ? "Long press to toggle between original and refined" : "Click to copy"}
-    >
-      <div className="flex justify-between items-start mb-2">
-        <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-          <div className={`text-[0.8em] sm:text-[0.9em] ${
-            isLatest ? 'opacity-70 text-gray-300' : 'opacity-50 text-gray-400'
-          }`}>{prompt.createdAt}</div>
-          {isLatest && (
-            <span className="bg-blue-500 text-white text-[0.65em] sm:text-[0.7em] px-1.5 sm:px-2 py-0.5 rounded-full font-medium">
-              Latest
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          {hasRefined && (
-            <div className={`flex items-center gap-1 text-[0.75em] sm:text-[0.8em] ${
-              isLatest ? 'opacity-80 text-gray-300' : 'opacity-70 text-gray-400'
-            }`}>
-              <PiSwapBold />
-              <span className="hidden sm:inline">{showRefined ? 'Refined' : 'Original'}</span>
+    <>
+      <div
+        className={`w-full rounded-[5px] p-3 sm:p-4 py-4 sm:py-6 cursor-pointer transition-all duration-200 relative group ${isDragging ? 'select-none' : ''} ${
+          isLatest 
+            ? 'bg-[#404040] border-2 border-[#606060] opacity-100 shadow-md latest-prompt' 
+            : 'bg-[#3B3B3B] border-2 border-[#424242] opacity-40 hover:opacity-70 hover:border-[#4a4a4a]'
+        }`}
+        style={{
+          transform: `translateX(${swipeOffset}px)`,
+          transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+        }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onClick={handleClick}
+        title={hasRefined ? "Long press to toggle between original and refined" : "Click to copy"}
+      >
+        {/* Delete background indicator - positioned behind the card */}
+        {swipeOffset > 0 && (
+          <div 
+            className="absolute inset-y-0 left-0 bg-red-500/30 flex items-center justify-start pl-4 pointer-events-none z-0"
+            style={{
+              width: `${swipeOffset}px`,
+              opacity: Math.min(swipeOffset / 50, 1)
+            }}
+          >
+            <div className="flex items-center gap-2 text-red-400">
+              <PiTrashBold className="text-lg" />
+              {swipeOffset > 80 && <span className="text-sm font-medium whitespace-nowrap">Release to delete</span>}
             </div>
-          )}
-          <div className={`text-[0.75em] sm:text-[0.8em] ${
-            isLatest ? 'opacity-80 text-gray-300' : 'opacity-70 text-gray-400'
+          </div>
+        )}
+
+        {/* Card content with higher z-index */}
+        <div className="relative z-10">
+          <div className="flex justify-between items-start mb-2">
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+              <div className={`text-[0.8em] sm:text-[0.9em] ${
+                isLatest ? 'opacity-70 text-gray-300' : 'opacity-50 text-gray-400'
+              }`}>{prompt.createdAt}</div>
+              {isLatest && (
+                <span className="bg-blue-500 text-white text-[0.65em] sm:text-[0.7em] px-1.5 sm:px-2 py-0.5 rounded-full font-medium">
+                  Latest
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              {hasRefined && (
+                <div className={`flex items-center gap-1 text-[0.75em] sm:text-[0.8em] ${
+                  isLatest ? 'opacity-80 text-gray-300' : 'opacity-70 text-gray-400'
+                }`}>
+                  <PiSwapBold />
+                  <span className="hidden sm:inline">{showRefined ? 'Refined' : 'Original'}</span>
+                </div>
+              )}
+              <div className={`text-[0.75em] sm:text-[0.8em] ${
+                isLatest ? 'opacity-80 text-gray-300' : 'opacity-70 text-gray-400'
+              }`}>
+                {copied ? <PiCheckBold className="text-green-400" /> : <PiCopyBold />}
+              </div>
+            </div>
+          </div>
+          
+          <p className={`text-[1em] sm:text-[1.1em] leading-relaxed ${
+            isLatest ? 'text-white' : 'text-gray-200'
           }`}>
-            {copied ? <PiCheckBold className="text-green-400" /> : <PiCopyBold />}
+            {displayText}
+          </p>
+        </div>
+        
+        {hasRefined && (
+          <div className="absolute top-2 right-2 z-20">
+            <div className={`w-2 h-2 rounded-full ${
+              showRefined 
+                ? (isLatest ? 'bg-blue-400 shadow-sm' : 'bg-blue-400') 
+                : (isLatest ? 'bg-yellow-400 shadow-sm' : 'bg-yellow-400')
+            }`} />
+          </div>
+        )}
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#2a2a2a] border border-[#404040] rounded-lg p-6 max-w-sm w-full">
+            <h3 className="text-lg font-medium text-white mb-2">Delete Prompt?</h3>
+            <p className="text-gray-300 text-sm mb-6">
+              This action cannot be undone. The prompt will be permanently deleted.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleCancelDelete}
+                className="px-4 py-2 bg-[#404040] hover:bg-[#4a4a4a] text-white rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <p className={`text-[1em] sm:text-[1.1em] leading-relaxed ${
-        isLatest ? 'text-white' : 'text-gray-200'
-      }`}>
-        {displayText}
-      </p>
-      
-      {hasRefined && (
-        <div className="absolute top-2 right-2">
-          <div className={`w-2 h-2 rounded-full ${
-            showRefined 
-              ? (isLatest ? 'bg-blue-400 shadow-sm' : 'bg-blue-400') 
-              : (isLatest ? 'bg-yellow-400 shadow-sm' : 'bg-yellow-400')
-          }`} />
-        </div>
       )}
-    </div>
+    </>
   );
 }
 

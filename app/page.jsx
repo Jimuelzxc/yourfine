@@ -14,7 +14,7 @@ import {
   loadSessions, getActiveSessionId, setActiveSessionId, getActiveSession,
   createSession, renameSession, deleteSession, addPromptToSession,
   getSessionPrompts, updateSessionPromptRefinement, migratePromptsToSessions,
-  getSessionList
+  getSessionList, deletePromptFromSession
 } from "./utils/localStorage";
 
 export default function Home() {
@@ -106,6 +106,18 @@ export default function Home() {
     }
   };
 
+  // Handle prompt deletion
+  const handleDeletePrompt = (promptId) => {
+    const updatedPrompts = deletePromptFromSession(activeSessionId, promptId);
+    if (updatedPrompts !== null) {
+      setPrompts(updatedPrompts);
+      
+      // Update session list to reflect new prompt count
+      const updatedSessionList = getSessionList();
+      setSessions(updatedSessionList);
+    }
+  };
+
   const handleSettingsClose = () => {
     setShowSettings(false);
     // Trigger TextArea refresh by updating key
@@ -166,6 +178,7 @@ export default function Home() {
                       key={prompt.id} 
                       prompt={prompt} 
                       isLatest={isLatest}
+                      onDelete={handleDeletePrompt}
                     />
                   );
                 })
