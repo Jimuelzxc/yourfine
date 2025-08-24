@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { PiCopyBold, PiCheckBold, PiSwapBold } from 'react-icons/pi';
 
 function Card({ prompt, isLatest = false }) {
-  const [showRefined, setShowRefined] = useState(false);
+  const [showRefined, setShowRefined] = useState(!!prompt?.refined);
   const [copied, setCopied] = useState(false);
   const longPressTimer = useRef(null);
   const isLongPress = useRef(false);

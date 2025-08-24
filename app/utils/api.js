@@ -8,19 +8,18 @@ export const AVAILABLE_MODELS = {
   openrouter: {
     name: 'OpenRouter',
     models: [
-      { id: 'google/gemini-2.0-flash-exp:free', name: 'Gemini 2.0 Flash (Free)', provider: 'openrouter' },
-      { id: 'google/gemini-pro-1.5', name: 'Gemini Pro 1.5', provider: 'openrouter' },
-      { id: 'anthropic/claude-3-sonnet', name: 'Claude 3 Sonnet', provider: 'openrouter' },
-      { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini', provider: 'openrouter' },
-      { id: 'openai/gpt-3.5-turbo', name: 'GPT-3.5 Turbo', provider: 'openrouter' }
+         { id: 'moonshotai/kimi-k2:free', name: 'Kimi K2(free)', provider: 'openrouter' },
+      { id: 'z-ai/glm-4.5-air:free', name: 'Z.AI: GLM 4.5 Air (free)', provider: 'openrouter' },
+    { id: 'deepseek/deepseek-chat-v3-0324:free', name: 'DeepSeek: DeepSeek V3 0324 (free)', provider: 'openrouter' },
+      { id: 'qwen/qwen3-30b-a3b:free', name: 'Qwen: Qwen3 30B A3B (free)', provider: 'openrouter' },
+     
     ]
   },
   gemini: {
-    name: 'Google Gemini Direct',
+    name: 'Google Gemini',
     models: [
       { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', provider: 'gemini' },
-      { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash Experimental', provider: 'gemini' },
-      { id: 'gemini-pro', name: 'Gemini Pro', provider: 'gemini' }
+    
     ]
   }
 };

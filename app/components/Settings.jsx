@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { PiXBold, PiCheckBold, PiWarningBold } from 'react-icons/pi';
+import { useState, useEffect, useRef } from 'react';
+import { PiXBold, PiCheckBold, PiWarningBold, PiCaretDownBold } from 'react-icons/pi';
 import { loadApiKey, saveApiKey, loadSelectedModel, saveSelectedModel } from '../utils/localStorage';
 import { AVAILABLE_MODELS, getAllModels, validateApiKey } from '../utils/api';
 
@@ -9,6 +9,8 @@ function Settings({ isOpen, onClose }) {
   const [isValidating, setIsValidating] = useState(false);
   const [validationStatus, setValidationStatus] = useState(null); // null, 'valid', 'invalid'
   const [error, setError] = useState('');
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -27,6 +29,20 @@ function Settings({ isOpen, onClose }) {
     }
   }, [isOpen]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowModelDropdown(false);
+      }
+    };
+
+    if (showModelDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showModelDropdown]);
+
   const handleApiKeyChange = (e) => {
     const newApiKey = e.target.value;
     setApiKey(newApiKey);
@@ -39,6 +55,7 @@ function Settings({ isOpen, onClose }) {
     setSelectedModel(model);
     saveSelectedModel(model);
     setValidationStatus(null); // Reset validation when model changes
+    setShowModelDropdown(false); // Close dropdown after selection
   };
 
   const handleValidateApiKey = async () => {
@@ -103,34 +120,49 @@ function Settings({ isOpen, onClose }) {
           {/* Model Selection */}
           <div>
             <label className="block text-[1em] font-medium mb-3 text-white">AI Model</label>
-            <div className="space-y-2">
-              {Object.entries(AVAILABLE_MODELS).map(([categoryKey, category]) => (
-                <div key={categoryKey}>
-                  <div className="text-[0.9em] font-medium opacity-80 mb-2 border-b border-[#505050] pb-1 text-gray-300">
-                    {category.name}
-                  </div>
-                  <div className="space-y-1 ml-2">
-                    {category.models.map((model) => (
-                      <label
-                        key={model.id}
-                        className="flex items-center space-x-3 cursor-pointer hover:bg-[#353535] p-2 rounded transition-colors"
-                      >
-                        <input
-                          type="radio"
-                          name="model"
-                          checked={selectedModel?.id === model.id}
-                          onChange={() => handleModelSelect(model)}
-                          className="w-4 h-4 text-blue-500 bg-[#404040] border-[#606060] focus:ring-blue-500"
-                        />
-                        <div>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setShowModelDropdown(!showModelDropdown)}
+                className="w-full bg-[#353535] border border-[#606060] rounded-[5px] px-3 py-3 text-left flex items-center justify-between hover:border-[#707070] transition-colors text-white"
+              >
+                <div>
+                  {selectedModel ? (
+                    <>
+                      <div className="text-[0.9em]">{selectedModel.name}</div>
+                      <div className="text-[0.7em] opacity-60 text-gray-400">{selectedModel.provider === 'gemini' ? 'Google Gemini Direct' : 'OpenRouter'}</div>
+                    </>
+                  ) : (
+                    <div className="text-[0.9em] opacity-60">Select a model</div>
+                  )}
+                </div>
+                <PiCaretDownBold className={`text-[0.8em] transition-transform ${
+                  showModelDropdown ? 'rotate-180' : ''
+                }`} />
+              </button>
+              
+              {showModelDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-[#2a2a2a] border border-[#606060] rounded-[5px] shadow-lg z-10 max-h-60 overflow-y-auto">
+                  {Object.entries(AVAILABLE_MODELS).map(([categoryKey, category]) => (
+                    <div key={categoryKey}>
+                      <div className="text-[0.8em] font-medium opacity-80 px-3 py-2 border-b border-[#505050] bg-[#333333] text-gray-300">
+                        {category.name}
+                      </div>
+                      {category.models.map((model) => (
+                        <button
+                          key={model.id}
+                          onClick={() => handleModelSelect(model)}
+                          className={`w-full text-left px-3 py-2 hover:bg-[#404040] transition-colors border-b border-[#454545] last:border-b-0 ${
+                            selectedModel?.id === model.id ? 'bg-[#404040] border-l-2 border-l-blue-500' : ''
+                          }`}
+                        >
                           <div className="text-[0.9em] text-white">{model.name}</div>
                           <div className="text-[0.7em] opacity-60 text-gray-400">{model.provider}</div>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
+                        </button>
+                      ))}
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           </div>
 

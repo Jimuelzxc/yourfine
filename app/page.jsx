@@ -106,8 +106,7 @@ export default function Home() {
                 })
               )}
             </div>
-            <div id="shadowing-top"></div>
-            <div id="shadowing-bottom"></div>
+         
           </div>
 
           <TextArea 
