@@ -14,7 +14,7 @@ import {
   loadSessions, getActiveSessionId, setActiveSessionId, getActiveSession,
   createSession, renameSession, deleteSession, addPromptToSession,
   getSessionPrompts, updateSessionPromptRefinement, migratePromptsToSessions,
-  getSessionList, deletePromptFromSession
+  getSessionList, deletePromptFromSession, savePromptToSession
 } from "./utils/localStorage";
 
 export default function Home() {
@@ -118,6 +118,18 @@ export default function Home() {
     }
   };
 
+  // Handle prompt save/bookmark
+  const handleSavePrompt = (promptId) => {
+    const updatedPrompts = savePromptToSession(activeSessionId, promptId);
+    if (updatedPrompts !== null) {
+      setPrompts(updatedPrompts);
+      
+      // Update session list to reflect changes
+      const updatedSessionList = getSessionList();
+      setSessions(updatedSessionList);
+    }
+  };
+
   const handleSettingsClose = () => {
     setShowSettings(false);
     // Trigger TextArea refresh by updating key
@@ -179,6 +191,7 @@ export default function Home() {
                       prompt={prompt} 
                       isLatest={isLatest}
                       onDelete={handleDeletePrompt}
+                      onSave={handleSavePrompt}
                     />
                   );
                 })

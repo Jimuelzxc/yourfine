@@ -328,6 +328,30 @@ export const deletePromptFromSession = (sessionId, promptId) => {
   return null; // Prompt not found
 };
 
+// Save/bookmark prompt in specific session
+export const savePromptToSession = (sessionId, promptId) => {
+  const sessions = loadSessions();
+  
+  if (!sessions[sessionId]) {
+    console.error(`Session ${sessionId} not found`);
+    return null;
+  }
+  
+  // Find the prompt and toggle its saved status
+  const promptIndex = sessions[sessionId].prompts.findIndex(prompt => prompt.id === promptId);
+  if (promptIndex === -1) {
+    console.error(`Prompt ${promptId} not found in session ${sessionId}`);
+    return null;
+  }
+  
+  // Toggle saved status
+  sessions[sessionId].prompts[promptIndex].saved = !sessions[sessionId].prompts[promptIndex].saved;
+  sessions[sessionId].lastModified = new Date().toISOString();
+  
+  saveSessions(sessions);
+  return sessions[sessionId].prompts;
+};
+
 // Get all session names and IDs for UI
 export const getSessionList = () => {
   const sessions = loadSessions();
