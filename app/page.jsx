@@ -55,11 +55,11 @@ export default function Home() {
     <div className="h-screen flex flex-col bg-[#282828]">
       {/* Navigation Header */}
       <div className="">
-        <div className="wrapper flex justify-between items-center py-[80px] px-[550px]">
-          <div className="flex items-center gap-4">
-            <h1 className="text-[1.5em] z-20">yourfine</h1>
+        <div className="wrapper flex justify-between items-center py-[80px] px-4 sm:px-8 md:px-16 lg:px-32 xl:px-[550px]">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <h1 className="text-[1.2em] sm:text-[1.5em] z-20">yourfine</h1>
             {prompts.length > 0 && (
-              <div className="text-[0.9em] opacity-70 bg-[#3B3B3B] px-3 py-1 rounded-full">
+              <div className="text-[0.8em] sm:text-[0.9em] opacity-70 bg-[#3B3B3B] px-2 sm:px-3 py-1 rounded-full">
                 {prompts.length} prompt{prompts.length !== 1 ? 's' : ''}
               </div>
             )}
@@ -68,28 +68,28 @@ export default function Home() {
           {/* Settings Button */}
           <button
             onClick={() => setShowSettings(true)}
-            className="group relative hover:bg-white/10 p-3 rounded-[8px] transition-all duration-200 flex items-center justify-center w-[52px] h-[52px] flex-shrink-0 hover:scale-105 active:scale-95 cursor-pointer"
+            className="group relative hover:bg-white/10 p-2 sm:p-3 rounded-[8px] transition-all duration-200 flex items-center justify-center w-[44px] h-[44px] sm:w-[52px] sm:h-[52px] flex-shrink-0 hover:scale-105 active:scale-95 cursor-pointer"
             title="Settings"
           >
-            <PiGearBold className="text-[1.3em] transition-all duration-200 group-hover:rotate-45 group-hover:scale-110 text-gray-300 group-hover:text-white" />
+            <PiGearBold className="text-[1.1em] sm:text-[1.3em] transition-all duration-200 group-hover:rotate-45 group-hover:scale-110 text-gray-300 group-hover:text-white" />
           </button>
         </div>
       </div>
       
       <div className="flex-1">
-        <div className="mx-[550px] flex flex-col items-center gap-4 h-full px-4">
+        <div className="mx-4 sm:mx-8 md:mx-16 lg:mx-32 xl:mx-[550px] flex flex-col items-center gap-4 h-full px-4">
           <div className="w-full relative" id="wrapper-cards">
             <div
               ref={cardsContainerRef}
               id="cards"
-              className="w-full flex flex-col gap-3 h-[500px] overflow-y-scroll pb-2 pt-2 relative"
+              className="w-full flex flex-col gap-3 h-[300px] sm:h-[400px] md:h-[500px] overflow-y-scroll pb-2 pt-2 relative"
             >
               {prompts.length === 0 ? (
                 // Empty state
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center opacity-50">
-                    <div className="text-[1.2em] mb-2">No prompts yet</div>
-                    <div className="text-[0.9em]">Start by typing a prompt below</div>
+                    <div className="text-[1em] sm:text-[1.2em] mb-2">No prompts yet</div>
+                    <div className="text-[0.8em] sm:text-[0.9em]">Start by typing a prompt below</div>
                   </div>
                 </div>
               ) : (
@@ -119,9 +119,9 @@ export default function Home() {
       
       {/* Status indicator */}
       {isRefining && (
-        <div className="fixed bottom-4 right-4 bg-[#3B3B3B] border border-[#424242] rounded-[5px] px-4 py-2 flex items-center gap-2">
-          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-          <span className="text-[0.9em]">Refining prompt...</span>
+        <div className="fixed bottom-4 right-4 left-4 sm:left-auto bg-[#3B3B3B] border border-[#424242] rounded-[5px] px-3 sm:px-4 py-2 flex items-center gap-2 max-w-xs sm:max-w-none mx-auto sm:mx-0">
+          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full flex-shrink-0"></div>
+          <span className="text-[0.8em] sm:text-[0.9em] truncate">Refining prompt...</span>
         </div>
       )}
       

@@ -57,9 +57,9 @@ function Card({ prompt, isLatest = false }) {
 
   if (!prompt) {
     return (
-      <div className="bg-[#3B3B3B] border-2 border-[#424242] w-full rounded-[5px] p-4 py-8 opacity-20">
-        <div className="text-[0.9em] opacity-50">No prompts yet</div>
-        <p className="text-[1.1em]">Start by typing a prompt below</p>
+      <div className="bg-[#3B3B3B] border-2 border-[#424242] w-full rounded-[5px] p-3 sm:p-4 py-6 sm:py-8 opacity-20">
+        <div className="text-[0.8em] sm:text-[0.9em] opacity-50">No prompts yet</div>
+        <p className="text-[1em] sm:text-[1.1em]">Start by typing a prompt below</p>
       </div>
     );
   }
@@ -69,7 +69,7 @@ function Card({ prompt, isLatest = false }) {
 
   return (
     <div
-      className={`w-full rounded-[5px] p-4 py-6 cursor-pointer transition-all duration-200 relative group ${
+      className={`w-full rounded-[5px] p-3 sm:p-4 py-4 sm:py-6 cursor-pointer transition-all duration-200 relative group ${
         isLatest 
           ? 'bg-[#404040] border-2 border-[#606060] opacity-100 shadow-md latest-prompt' 
           : 'bg-[#3B3B3B] border-2 border-[#424242] opacity-40 hover:opacity-70 hover:border-[#4a4a4a]'
@@ -81,26 +81,26 @@ function Card({ prompt, isLatest = false }) {
       title={hasRefined ? "Long press to toggle between original and refined" : "Click to copy"}
     >
       <div className="flex justify-between items-start mb-2">
-        <div className="flex items-center gap-2">
-          <div className={`text-[0.9em] ${
+        <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+          <div className={`text-[0.8em] sm:text-[0.9em] ${
             isLatest ? 'opacity-70 text-gray-300' : 'opacity-50 text-gray-400'
           }`}>{prompt.createdAt}</div>
           {isLatest && (
-            <span className="bg-blue-500 text-white text-[0.7em] px-2 py-0.5 rounded-full font-medium">
+            <span className="bg-blue-500 text-white text-[0.65em] sm:text-[0.7em] px-1.5 sm:px-2 py-0.5 rounded-full font-medium">
               Latest
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           {hasRefined && (
-            <div className={`flex items-center gap-1 text-[0.8em] ${
+            <div className={`flex items-center gap-1 text-[0.75em] sm:text-[0.8em] ${
               isLatest ? 'opacity-80 text-gray-300' : 'opacity-70 text-gray-400'
             }`}>
               <PiSwapBold />
-              <span>{showRefined ? 'Refined' : 'Original'}</span>
+              <span className="hidden sm:inline">{showRefined ? 'Refined' : 'Original'}</span>
             </div>
           )}
-          <div className={`text-[0.8em] ${
+          <div className={`text-[0.75em] sm:text-[0.8em] ${
             isLatest ? 'opacity-80 text-gray-300' : 'opacity-70 text-gray-400'
           }`}>
             {copied ? <PiCheckBold className="text-green-400" /> : <PiCopyBold />}
@@ -108,7 +108,7 @@ function Card({ prompt, isLatest = false }) {
         </div>
       </div>
       
-      <p className={`text-[1.1em] leading-relaxed ${
+      <p className={`text-[1em] sm:text-[1.1em] leading-relaxed ${
         isLatest ? 'text-white' : 'text-gray-200'
       }`}>
         {displayText}

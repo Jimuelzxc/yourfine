@@ -102,11 +102,11 @@ function Settings({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-[#2a2a2a] border border-[#505050] rounded-[10px] w-[500px] max-h-[80vh] overflow-y-auto shadow-2xl">
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
+      <div className="bg-[#2a2a2a] border border-[#505050] rounded-[10px] w-full max-w-[500px] max-h-[80vh] overflow-y-auto shadow-2xl">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-[#505050]">
-          <h2 className="text-[1.3em] font-semibold text-white">Settings</h2>
+        <div className="flex justify-between items-center p-4 sm:p-6 border-b border-[#505050]">
+          <h2 className="text-[1.2em] sm:text-[1.3em] font-semibold text-white">Settings</h2>
           <button
             onClick={onClose}
             className="text-[1.2em] opacity-70 hover:opacity-100 transition-opacity text-white"
@@ -116,7 +116,7 @@ function Settings({ isOpen, onClose }) {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* Model Selection */}
           <div>
             <label className="block text-[1em] font-medium mb-3 text-white">AI Model</label>
@@ -241,7 +241,7 @@ function Settings({ isOpen, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end p-6 border-t border-[#505050]">
+        <div className="flex justify-end p-4 sm:p-6 border-t border-[#505050]">
           <button
             onClick={onClose}
             className="bg-[#505050] hover:bg-[#606060] px-6 py-2 rounded-[5px] transition-colors text-white whitespace-nowrap flex-shrink-0"
