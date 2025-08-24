@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { PiGearBold, PiBookmarkSimpleBold } from "react-icons/pi";
+import { PiGearBold, PiBookmarkSimpleBold, PiMagnifyingGlassBold, PiXBold } from "react-icons/pi";
 import Image from "next/image";
 import TextArea from "./components/TextArea";
 import Card from "./components/Card";
@@ -25,6 +25,7 @@ export default function Home() {
   const [sessions, setSessions] = useState([]);
   const [activeSessionId, setActiveSessionIdState] = useState('default');
   const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const cardsContainerRef = useRef(null);
 
   // Initialize sessions and migrate old data if needed
@@ -140,13 +141,26 @@ export default function Home() {
   // Display all prompts in reverse order (oldest first, newest at bottom)
   const displayedPrompts = [...prompts].reverse();
   
+  // Filter prompts based on search query
+  const searchFilteredPrompts = searchQuery.trim() 
+    ? displayedPrompts.filter(prompt => {
+        const searchTerm = searchQuery.toLowerCase();
+        const originalText = prompt.original?.toLowerCase() || '';
+        const refinedText = prompt.refined?.toLowerCase() || '';
+        return originalText.includes(searchTerm) || refinedText.includes(searchTerm);
+      })
+    : displayedPrompts;
+  
   // Filter prompts based on saved status if filter is active
   const filteredPrompts = showSavedOnly 
-    ? displayedPrompts.filter(prompt => prompt.saved)
-    : displayedPrompts;
+    ? searchFilteredPrompts.filter(prompt => prompt.saved)
+    : searchFilteredPrompts;
     
   // Count saved prompts in current session
   const savedCount = prompts.filter(prompt => prompt.saved).length;
+  
+  // Count search results
+  const searchResultsCount = searchFilteredPrompts.length;
 
   return (
     <div className="h-screen flex flex-col bg-[#282828]">
@@ -177,6 +191,40 @@ export default function Home() {
       <div className="flex-1">
         <div className="mx-4 sm:mx-8 md:mx-16 lg:mx-32 xl:mx-[550px] flex flex-col items-center gap-4 h-full px-4">
           <div className="w-full relative" id="wrapper-cards">
+            {/* Search Input */}
+            {prompts.length > 0 && (
+              <div className="mb-3">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <PiMagnifyingGlassBold className="h-4 w-4 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search prompts..."
+                    className="w-full pl-10 pr-10 py-2 bg-[#3B3B3B] border border-[#424242] rounded-[8px] text-white placeholder-gray-400 focus:outline-none focus:border-[#606060] focus:ring-1 focus:ring-[#606060] transition-colors"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors"
+                    >
+                      <PiXBold className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+                
+                {/* Search Results Count */}
+                {searchQuery && (
+                  <div className="mt-2 text-[0.8em] text-gray-400">
+                    {searchResultsCount} result{searchResultsCount !== 1 ? 's' : ''} found
+                    {searchResultsCount > 0 && ` for "${searchQuery}"`}
+                  </div>
+                )}
+              </div>
+            )}
+            
             {/* Saves Filter Toggle */}
             {prompts.length > 0 && (
               <div className="flex justify-between items-center mb-3">
@@ -209,7 +257,12 @@ export default function Home() {
                 </div>
                 
                 <div className="text-[0.8em] sm:text-[0.9em] opacity-50 text-gray-400">
-                  {showSavedOnly ? 'Saved only' : 'All prompts'}
+                  {searchQuery 
+                    ? `${searchResultsCount} result${searchResultsCount !== 1 ? 's' : ''}` 
+                    : showSavedOnly 
+                      ? 'Saved only' 
+                      : 'All prompts'
+                  }
                 </div>
               </div>
             )}
@@ -223,7 +276,12 @@ export default function Home() {
                 // Empty state
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center opacity-50">
-                    {showSavedOnly ? (
+                    {searchQuery ? (
+                      <>
+                        <div className="text-[1em] sm:text-[1.2em] mb-2">No results found</div>
+                        <div className="text-[0.8em] sm:text-[0.9em]">Try different search terms or clear the search</div>
+                      </>
+                    ) : showSavedOnly ? (
                       <>
                         <div className="text-[1em] sm:text-[1.2em] mb-2">No saved prompts yet</div>
                         <div className="text-[0.8em] sm:text-[0.9em]">Swipe left on prompts to save them</div>
