@@ -100,11 +100,22 @@ export default function Home() {
   };
 
   const handleDeleteSession = (sessionId) => {
+    // Check if this is the last session
+    if (sessions.length <= 1) {
+      // Create a new session before deleting the last one
+      const newSession = createSession();
+      const updatedSessionList = getSessionList();
+      setSessions(updatedSessionList);
+      
+      // Switch to the new session
+      handleSessionChange(newSession.id);
+    }
+    
     if (deleteSession(sessionId)) {
       const updatedSessionList = getSessionList();
       setSessions(updatedSessionList);
       
-      // If we deleted the active session, it would have been switched to default automatically
+      // If we deleted the active session, switch to the new active one
       const newActiveId = getActiveSessionId();
       setActiveSessionIdState(newActiveId);
     }

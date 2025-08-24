@@ -71,7 +71,7 @@ function SessionSelector({
 
   const handleDeleteSession = (sessionId, e) => {
     e.stopPropagation();
-    if (sessionId !== 'default' && window.confirm('Are you sure you want to delete this session? This action cannot be undone.')) {
+    if (window.confirm('Are you sure you want to delete this session? This action cannot be undone.')) {
       onDeleteSession(sessionId);
     }
   };
@@ -173,15 +173,13 @@ function SessionSelector({
                       >
                         <PiPencilBold />
                       </button>
-                      {session.id !== 'default' && (
-                        <button
-                          onClick={(e) => handleDeleteSession(session.id, e)}
-                          className="text-gray-400 hover:text-red-400 text-[0.8em] p-1"
-                          title="Delete"
-                        >
-                          <PiTrashBold />
-                        </button>
-                      )}
+                      <button
+                        onClick={(e) => handleDeleteSession(session.id, e)}
+                        className="text-gray-400 hover:text-red-400 text-[0.8em] p-1"
+                        title="Delete"
+                      >
+                        <PiTrashBold />
+                      </button>
                     </div>
                   </div>
                 </button>

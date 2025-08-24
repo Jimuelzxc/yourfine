@@ -123,8 +123,8 @@ export const loadSessions = () => {
     const stored = localStorage.getItem(SESSIONS_KEY);
     const sessions = stored ? JSON.parse(stored) : {};
     
-    // Ensure default session exists
-    if (!sessions.default) {
+    // Only create default session if no sessions exist at all
+    if (Object.keys(sessions).length === 0) {
       sessions.default = {
         id: 'default',
         name: 'Default Session',
@@ -161,7 +161,17 @@ export const saveSessions = (sessions) => {
 // Get active session ID
 export const getActiveSessionId = () => {
   try {
-    return localStorage.getItem(ACTIVE_SESSION_KEY) || 'default';
+    const activeId = localStorage.getItem(ACTIVE_SESSION_KEY);
+    const sessions = loadSessions();
+    
+    // If the stored active session doesn't exist, pick the first available session
+    if (activeId && sessions[activeId]) {
+      return activeId;
+    }
+    
+    // Return first available session or 'default'
+    const sessionIds = Object.keys(sessions);
+    return sessionIds.length > 0 ? sessionIds[0] : 'default';
   } catch (error) {
     console.error('Error loading active session ID:', error);
     return 'default';
@@ -186,18 +196,24 @@ export const getActiveSession = () => {
 
 // Delete a session
 export const deleteSession = (sessionId) => {
-  if (sessionId === 'default') {
-    console.warn('Cannot delete default session');
+  const sessions = loadSessions();
+  const sessionIds = Object.keys(sessions);
+  
+  // Don't allow deletion if it's the only session
+  if (sessionIds.length <= 1) {
+    console.warn('Cannot delete the only remaining session');
     return false;
   }
   
-  const sessions = loadSessions();
   delete sessions[sessionId];
   saveSessions(sessions);
   
-  // If we deleted the active session, switch to default
+  // If we deleted the active session, switch to another one
   if (getActiveSessionId() === sessionId) {
-    setActiveSessionId('default');
+    // Find the first remaining session
+    const remainingSessionIds = Object.keys(sessions);
+    const newActiveId = remainingSessionIds[0] || 'default';
+    setActiveSessionId(newActiveId);
   }
   
   return true;
