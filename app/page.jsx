@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { PiGearBold } from "react-icons/pi";
+import { PiGearBold, PiBookmarkSimpleBold } from "react-icons/pi";
 import Image from "next/image";
 import TextArea from "./components/TextArea";
 import Card from "./components/Card";
@@ -24,6 +24,7 @@ export default function Home() {
   const [settingsUpdateKey, setSettingsUpdateKey] = useState(0);
   const [sessions, setSessions] = useState([]);
   const [activeSessionId, setActiveSessionIdState] = useState('default');
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
   const cardsContainerRef = useRef(null);
 
   // Initialize sessions and migrate old data if needed
@@ -138,6 +139,14 @@ export default function Home() {
 
   // Display all prompts in reverse order (oldest first, newest at bottom)
   const displayedPrompts = [...prompts].reverse();
+  
+  // Filter prompts based on saved status if filter is active
+  const filteredPrompts = showSavedOnly 
+    ? displayedPrompts.filter(prompt => prompt.saved)
+    : displayedPrompts;
+    
+  // Count saved prompts in current session
+  const savedCount = prompts.filter(prompt => prompt.saved).length;
 
   return (
     <div className="h-screen flex flex-col bg-[#282828]">
@@ -168,23 +177,69 @@ export default function Home() {
       <div className="flex-1">
         <div className="mx-4 sm:mx-8 md:mx-16 lg:mx-32 xl:mx-[550px] flex flex-col items-center gap-4 h-full px-4">
           <div className="w-full relative" id="wrapper-cards">
+            {/* Saves Filter Toggle */}
+            {prompts.length > 0 && (
+              <div className="flex justify-between items-center mb-3">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowSavedOnly(!showSavedOnly)}
+                    className={`group relative hover:bg-white/10 p-2 rounded-[8px] transition-all duration-200 flex items-center justify-center w-[40px] h-[40px] flex-shrink-0 hover:scale-105 active:scale-95 cursor-pointer ${
+                      showSavedOnly 
+                        ? 'bg-orange-500/20 text-orange-400' 
+                        : 'text-gray-400 hover:text-white'
+                    }`}
+                    title={showSavedOnly ? 'Show all prompts' : 'Show saved prompts only'}
+                  >
+                    <PiBookmarkSimpleBold className={`text-[1.1em] transition-all duration-200 group-hover:scale-110 ${
+                      showSavedOnly ? 'fill-current' : ''
+                    }`} />
+                  </button>
+                  
+                  {showSavedOnly && (
+                    <div className="text-[0.8em] sm:text-[0.9em] opacity-70 bg-orange-500/20 text-orange-300 px-2 sm:px-3 py-1 rounded-full border border-orange-400/30">
+                      {filteredPrompts.length} saved prompt{filteredPrompts.length !== 1 ? 's' : ''}
+                    </div>
+                  )}
+                  
+                  {!showSavedOnly && savedCount > 0 && (
+                    <div className="text-[0.8em] sm:text-[0.9em] opacity-50 text-gray-400">
+                      {savedCount} saved
+                    </div>
+                  )}
+                </div>
+                
+                <div className="text-[0.8em] sm:text-[0.9em] opacity-50 text-gray-400">
+                  {showSavedOnly ? 'Saved only' : 'All prompts'}
+                </div>
+              </div>
+            )}
+            
             <div
               ref={cardsContainerRef}
               id="cards"
               className="w-full flex flex-col gap-3 h-[300px] sm:h-[400px] md:h-[400px] overflow-y-scroll pb-2 pt-2 relative"
             >
-              {prompts.length === 0 ? (
+              {filteredPrompts.length === 0 ? (
                 // Empty state
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center opacity-50">
-                    <div className="text-[1em] sm:text-[1.2em] mb-2">No prompts yet</div>
-                    <div className="text-[0.8em] sm:text-[0.9em]">Start by typing a prompt below</div>
+                    {showSavedOnly ? (
+                      <>
+                        <div className="text-[1em] sm:text-[1.2em] mb-2">No saved prompts yet</div>
+                        <div className="text-[0.8em] sm:text-[0.9em]">Swipe left on prompts to save them</div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-[1em] sm:text-[1.2em] mb-2">No prompts yet</div>
+                        <div className="text-[0.8em] sm:text-[0.9em]">Start by typing a prompt below</div>
+                      </>
+                    )}
                   </div>
                 </div>
               ) : (
-                // Display all prompts (oldest to newest)
-                displayedPrompts.map((prompt, index) => {
-                  const isLatest = index === displayedPrompts.length - 1; // Last item is newest
+                // Display filtered prompts (oldest to newest)
+                filteredPrompts.map((prompt, index) => {
+                  const isLatest = !showSavedOnly && index === filteredPrompts.length - 1; // Only show latest badge when not filtering
                   return (
                     <Card 
                       key={prompt.id} 
