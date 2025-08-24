@@ -55,8 +55,8 @@ export default function Home() {
     <div className="h-screen flex flex-col bg-[#282828]">
       {/* Navigation Header */}
       <div className="">
-        <div className="wrapper flex justify-between items-center py-[80px] px-4 sm:px-8 md:px-16 lg:px-32 xl:px-[550px]">
-          <div className="flex items-center gap-2 sm:gap-4">
+        <div className="mx-4 flex justify-between items-center py-[80px] px-4 sm:px-8 md:px-16 lg:px-32 xl:px-[550px]">
+          <div className="flex items-center gap-2 sm:gap-2">
             <h1 className="text-[1.2em] sm:text-[1.5em] z-20">yourfine</h1>
             {prompts.length > 0 && (
               <div className="text-[0.8em] sm:text-[0.9em] opacity-70 bg-[#3B3B3B] px-2 sm:px-3 py-1 rounded-full">
@@ -82,7 +82,7 @@ export default function Home() {
             <div
               ref={cardsContainerRef}
               id="cards"
-              className="w-full flex flex-col gap-3 h-[300px] sm:h-[400px] md:h-[500px] overflow-y-scroll pb-2 pt-2 relative"
+              className="w-full flex flex-col gap-3 h-[300px] sm:h-[400px] md:h-[400px] overflow-y-scroll pb-2 pt-2 relative"
             >
               {prompts.length === 0 ? (
                 // Empty state
