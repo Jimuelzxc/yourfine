@@ -100,7 +100,7 @@ function SessionSelector({
       </button>
 
       {showDropdown && (
-        <div className="absolute top-full left-0 mt-1 bg-[#2a2a2a] border border-[#505050] rounded-[5px] min-w-[200px] max-h-[300px] overflow-y-auto z-50 shadow-2xl">
+        <div className="absolute bottom-full left-0 mb-1 bg-[#2a2a2a] border border-[#505050] rounded-[5px] min-w-[200px] max-h-[300px] overflow-y-auto z-50 shadow-2xl">
           {/* Create New Session */}
           <button
             onClick={handleCreateSession}
