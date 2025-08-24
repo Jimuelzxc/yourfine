@@ -1,21 +1,62 @@
 import { useState, useRef, useEffect } from 'react';
 import { PiStarFourFill, PiArrowUpBold, PiCaretDownBold } from "react-icons/pi";
-import { loadApiKey, loadSelectedModel } from '../utils/localStorage';
-import { refinePrompt } from '../utils/api';
+import { loadApiKey, loadSelectedModel, saveSelectedModel } from '../utils/localStorage';
+import { refinePrompt, AVAILABLE_MODELS, getAllModels } from '../utils/api';
 
 function TextArea({ onSubmitPrompt, isRefining = false }) {
   const [prompt, setPrompt] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [selectedModel, setSelectedModel] = useState(null);
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
+  const [isModelSwitching, setIsModelSwitching] = useState(false);
   const [error, setError] = useState('');
   const textareaRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const savedApiKey = loadApiKey();
     const savedModel = loadSelectedModel();
     setApiKey(savedApiKey);
-    setSelectedModel(savedModel);
+    
+    if (savedModel) {
+      setSelectedModel(savedModel);
+    } else {
+      // Set default model if none saved
+      const defaultModel = getAllModels()[0];
+      setSelectedModel(defaultModel);
+      saveSelectedModel(defaultModel);
+    }
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowModelDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleModelSelect = async (model) => {
+    setIsModelSwitching(true);
+    setError('');
+    
+    try {
+      // Simulate wait state for model switching
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      setSelectedModel(model);
+      saveSelectedModel(model);
+      setShowModelDropdown(false);
+    } catch (error) {
+      setError('Failed to switch model');
+    } finally {
+      setIsModelSwitching(false);
+    }
+  };
 
   const handleSubmit = async (shouldRefine = false) => {
     if (!prompt.trim()) return;
@@ -107,41 +148,91 @@ function TextArea({ onSubmitPrompt, isRefining = false }) {
       
       <div className="flex flex-row justify-between items-center mt-4">
         <div className="flex items-center gap-2 flex-1">
-          {/* Model Display */}
-          <div className="bg-[#303030] flex flex-row gap-2 items-center px-4 py-2 rounded-[5px] text-[0.9em] max-w-[300px]">
-            <div className="text-left min-w-0">
-              <div className="text-[0.8em] opacity-70 truncate">
-                {modelDisplay.provider}
+          {/* Interactive Model Selection */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => !isModelSwitching && setShowModelDropdown(!showModelDropdown)}
+              disabled={isModelSwitching}
+              className={`bg-[#303030] flex flex-row gap-2 items-center px-4 py-2 rounded-[5px] text-[0.9em] max-w-[300px] transition-all duration-150 ${
+                isModelSwitching 
+                  ? 'opacity-70 cursor-not-allowed' 
+                  : 'hover:bg-[#404040] cursor-pointer'
+              }`}
+              title="Click to select model"
+            >
+              <div className="text-left min-w-0 flex-1">
+                <div className="text-[0.8em] opacity-70 truncate">
+                  {isModelSwitching ? 'Switching...' : modelDisplay.provider}
+                </div>
+                <div className="text-[0.9em] truncate">
+                  {isModelSwitching ? 'Please wait' : modelDisplay.model}
+                </div>
               </div>
-              <div className="text-[0.9em] truncate">{modelDisplay.model}</div>
-            </div>
-            <PiCaretDownBold className="opacity-50 flex-shrink-0" />
+              <PiCaretDownBold className={`opacity-50 flex-shrink-0 transition-transform duration-200 ${
+                showModelDropdown ? 'rotate-180' : ''
+              } ${isModelSwitching ? 'animate-spin' : ''}`} />
+            </button>
+            
+            {/* Model Selection Dropdown - Positioned Above */}
+            {showModelDropdown && !isModelSwitching && (
+              <div className="absolute bottom-full left-0 mb-2 bg-[#2a2a2a] border border-[#505050] rounded-[5px] min-w-[320px] max-h-[300px] overflow-y-auto z-50 shadow-2xl">
+                {Object.entries(AVAILABLE_MODELS).map(([categoryKey, category]) => (
+                  <div key={categoryKey}>
+                    <div className="px-3 py-2 text-[0.8em] font-semibold opacity-80 border-b border-[#404040] text-gray-300 bg-[#353535]">
+                      {category.name}
+                    </div>
+                    {category.models.map((model) => (
+                      <button
+                        key={model.id}
+                        onClick={() => handleModelSelect(model)}
+                        className={`w-full text-left px-3 py-3 hover:bg-[#404040] transition-colors border-b border-[#353535] last:border-b-0 ${
+                          selectedModel?.id === model.id ? 'bg-[#404040] border-l-4 border-l-blue-500' : ''
+                        }`}
+                      >
+                        <div className="text-[0.9em] text-white">{model.name}</div>
+                        <div className="text-[0.7em] opacity-60 text-gray-400">{model.provider}</div>
+                        {selectedModel?.id === model.id && (
+                          <div className="text-[0.6em] text-blue-400 mt-1">Currently selected</div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           
           {/* Status Indicators */}
           <div className="flex items-center gap-1 text-[0.8em] opacity-70 flex-shrink-0">
             <div className={`w-2 h-2 rounded-full ${
+              isModelSwitching ? 'bg-orange-400' :
               hasApiKey ? 'bg-green-400' : 'bg-yellow-400'
-            }`} title={hasApiKey ? 'API key configured' : 'API key not set'} />
-            <span className="whitespace-nowrap">{hasApiKey ? 'Ready' : 'Setup needed'}</span>
+            }`} title={
+              isModelSwitching ? 'Switching model...' :
+              hasApiKey ? 'API key configured' : 'API key not set'
+            } />
+            <span className="whitespace-nowrap">
+              {isModelSwitching ? 'Switching...' :
+               hasApiKey ? 'Ready' : 'Setup needed'}
+            </span>
           </div>
         </div>
         
         <div className="flex flex-row gap-1 flex-shrink-0">
           <button
             onClick={() => handleSubmit(true)}
-            disabled={!prompt.trim() || isRefining}
+            disabled={!prompt.trim() || isRefining || isModelSwitching}
             className="bg-[#303030] p-2.5 rounded-[5px] hover:bg-white transition-all duration-150 cursor-pointer hover:text-[#282828] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#303030] disabled:hover:text-white flex items-center justify-center w-[44px] h-[44px]"
-            title="Refine with AI (Shift+Ctrl+Enter)"
+            title={isModelSwitching ? "Please wait, switching model..." : "Refine with AI (Shift+Ctrl+Enter)"}
           >
-            <PiStarFourFill className={`text-[1.3em] ${isRefining ? 'animate-spin' : ''}`} />
+            <PiStarFourFill className={`text-[1.3em] ${isRefining || isModelSwitching ? 'animate-spin' : ''}`} />
           </button>
           
           <button
             onClick={() => handleSubmit(false)}
-            disabled={!prompt.trim() || isRefining}
+            disabled={!prompt.trim() || isRefining || isModelSwitching}
             className="bg-[#303030] p-2.5 rounded-[5px] hover:bg-white transition-all duration-150 cursor-pointer hover:text-[#282828] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#303030] disabled:hover:text-white flex items-center justify-center w-[44px] h-[44px]"
-            title="Submit prompt (Enter)"
+            title={isModelSwitching ? "Please wait, switching model..." : "Submit prompt (Enter)"}
           >
             <PiArrowUpBold className="text-[1.3em]" />
           </button>
