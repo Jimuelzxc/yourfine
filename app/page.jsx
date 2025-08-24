@@ -6,20 +6,48 @@ import Image from "next/image";
 import TextArea from "./components/TextArea";
 import Card from "./components/Card";
 import Settings from "./components/Settings";
-import { loadPrompts, addPrompt, updatePromptRefinement } from "./utils/localStorage";
+import SessionSelector from "./components/SessionSelector";
+import { 
+  // Legacy functions for backward compatibility
+  loadPrompts, addPrompt, updatePromptRefinement,
+  // New session functions
+  loadSessions, getActiveSessionId, setActiveSessionId, getActiveSession,
+  createSession, renameSession, deleteSession, addPromptToSession,
+  getSessionPrompts, updateSessionPromptRefinement, migratePromptsToSessions,
+  getSessionList
+} from "./utils/localStorage";
 
 export default function Home() {
   const [prompts, setPrompts] = useState([]);
   const [isRefining, setIsRefining] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [settingsUpdateKey, setSettingsUpdateKey] = useState(0);
+  const [sessions, setSessions] = useState([]);
+  const [activeSessionId, setActiveSessionIdState] = useState('default');
   const cardsContainerRef = useRef(null);
 
-  // Load prompts from localStorage on component mount
+  // Initialize sessions and migrate old data if needed
   useEffect(() => {
-    const savedPrompts = loadPrompts();
-    setPrompts(savedPrompts);
+    // Run migration first
+    migratePromptsToSessions();
+    
+    // Load sessions and set active session
+    const sessionList = getSessionList();
+    setSessions(sessionList);
+    
+    const currentActiveId = getActiveSessionId();
+    setActiveSessionIdState(currentActiveId);
+    
+    // Load prompts for active session
+    const activeSessionPrompts = getSessionPrompts(currentActiveId);
+    setPrompts(activeSessionPrompts);
   }, []);
+
+  // Update prompts when active session changes
+  useEffect(() => {
+    const activeSessionPrompts = getSessionPrompts(activeSessionId);
+    setPrompts(activeSessionPrompts);
+  }, [activeSessionId]);
 
   // Auto-scroll to latest prompt (bottom)
   useEffect(() => {
@@ -32,13 +60,49 @@ export default function Home() {
     setIsRefining(true);
     
     try {
-      // Add prompt immediately (with or without refinement)
-      const updatedPrompts = addPrompt(originalPrompt, refinedPrompt);
+      // Add prompt to active session
+      const updatedPrompts = addPromptToSession(activeSessionId, originalPrompt, refinedPrompt);
       setPrompts(updatedPrompts);
+      
+      // Update session list to reflect new prompt count
+      const updatedSessionList = getSessionList();
+      setSessions(updatedSessionList);
     } catch (error) {
       console.error('Error adding prompt:', error);
     } finally {
       setIsRefining(false);
+    }
+  };
+
+  // Session management handlers
+  const handleSessionChange = (sessionId) => {
+    setActiveSessionIdState(sessionId);
+    setActiveSessionId(sessionId);
+  };
+
+  const handleCreateSession = () => {
+    const newSession = createSession();
+    const updatedSessionList = getSessionList();
+    setSessions(updatedSessionList);
+    
+    // Switch to the new session
+    handleSessionChange(newSession.id);
+  };
+
+  const handleRenameSession = (sessionId, newName) => {
+    renameSession(sessionId, newName);
+    const updatedSessionList = getSessionList();
+    setSessions(updatedSessionList);
+  };
+
+  const handleDeleteSession = (sessionId) => {
+    if (deleteSession(sessionId)) {
+      const updatedSessionList = getSessionList();
+      setSessions(updatedSessionList);
+      
+      // If we deleted the active session, it would have been switched to default automatically
+      const newActiveId = getActiveSessionId();
+      setActiveSessionIdState(newActiveId);
     }
   };
 
@@ -55,9 +119,10 @@ export default function Home() {
     <div className="h-screen flex flex-col bg-[#282828]">
       {/* Navigation Header */}
       <div className="">
-        <div className="mx-4 flex justify-between items-center py-[80px] px-4 sm:px-8 md:px-16 lg:px-32 xl:px-[550px]">
-          <div className="flex items-center gap-2 sm:gap-2">
-            <h1 className="text-[1.2em] sm:text-[1.5em] z-20">yourfine</h1>
+        <div className="wrapper flex justify-between items-center py-[80px] px-4 sm:px-8 md:px-16 lg:px-32 xl:px-[550px]">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <h1 className="text-[1.2em] sm:text-[1.5em] z-20 flex items-center">yourfine</h1>
+            
             {prompts.length > 0 && (
               <div className="text-[0.8em] sm:text-[0.9em] opacity-70 bg-[#3B3B3B] px-2 sm:px-3 py-1 rounded-full">
                 {prompts.length} prompt{prompts.length !== 1 ? 's' : ''}
@@ -113,6 +178,12 @@ export default function Home() {
             key={settingsUpdateKey}
             onSubmitPrompt={handleSubmitPrompt}
             isRefining={isRefining}
+            sessions={sessions}
+            activeSessionId={activeSessionId}
+            onSessionChange={handleSessionChange}
+            onCreateSession={handleCreateSession}
+            onRenameSession={handleRenameSession}
+            onDeleteSession={handleDeleteSession}
           />
         </div>
       </div>
