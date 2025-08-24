@@ -68,10 +68,10 @@ export default function Home() {
           {/* Settings Button */}
           <button
             onClick={() => setShowSettings(true)}
-            className="bg-[#3B3B3B] hover:bg-[#4B4B4B] border border-[#424242] p-3 rounded-[5px] transition-all duration-150 flex items-center justify-center w-[52px] h-[52px] flex-shrink-0"
+            className="group relative hover:bg-white/10 p-3 rounded-[8px] transition-all duration-200 flex items-center justify-center w-[52px] h-[52px] flex-shrink-0 hover:scale-105 active:scale-95 cursor-pointer"
             title="Settings"
           >
-            <PiGearBold className="text-[1.2em]" />
+            <PiGearBold className="text-[1.3em] transition-all duration-200 group-hover:rotate-45 group-hover:scale-110 text-gray-300 group-hover:text-white" />
           </button>
         </div>
       </div>

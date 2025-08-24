@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { PiStarFourFill, PiArrowUpBold, PiCaretDownBold } from "react-icons/pi";
+import { PiStarFourFill, PiArrowUpBold, PiCaretDownBold, PiSpinnerBold } from "react-icons/pi";
 import { loadApiKey, loadSelectedModel, saveSelectedModel } from '../utils/localStorage';
 import { refinePrompt, AVAILABLE_MODELS, getAllModels } from '../utils/api';
 
@@ -9,9 +9,11 @@ function TextArea({ onSubmitPrompt, isRefining = false }) {
   const [selectedModel, setSelectedModel] = useState(null);
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [isModelSwitching, setIsModelSwitching] = useState(false);
+  const [isLocalRefining, setIsLocalRefining] = useState(false);
   const [error, setError] = useState('');
   const textareaRef = useRef(null);
   const dropdownRef = useRef(null);
+  const errorTimeoutRef = useRef(null);
 
   useEffect(() => {
     const savedApiKey = loadApiKey();
@@ -39,6 +41,28 @@ function TextArea({ onSubmitPrompt, isRefining = false }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Auto-dismiss errors after 7 seconds
+  useEffect(() => {
+    if (error) {
+      // Clear any existing timeout
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
+      
+      // Set new timeout to clear error after 7 seconds
+      errorTimeoutRef.current = setTimeout(() => {
+        setError('');
+      }, 7000);
+    }
+    
+    // Cleanup timeout on component unmount or when error changes
+    return () => {
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
+    };
+  }, [error]);
 
   const handleModelSelect = async (model) => {
     setIsModelSwitching(true);
@@ -73,6 +97,9 @@ function TextArea({ onSubmitPrompt, isRefining = false }) {
         setError('Please select a model in Settings');
         return;
       }
+      
+      // Set local loading state immediately
+      setIsLocalRefining(true);
     }
 
     try {
@@ -93,6 +120,11 @@ function TextArea({ onSubmitPrompt, isRefining = false }) {
     } catch (error) {
       console.error('Error processing prompt:', error);
       setError(error.message || 'Failed to process prompt');
+    } finally {
+      // Clear local loading state
+      if (shouldRefine) {
+        setIsLocalRefining(false);
+      }
     }
   };
 
@@ -131,8 +163,22 @@ function TextArea({ onSubmitPrompt, isRefining = false }) {
     <div className="w-full bg-[#3B3B3B] border-2 border-[#3f3f3f] flex flex-col p-4 rounded-[5px] relative">
       {/* Error Display */}
       {error && (
-        <div className="mb-4 p-3 bg-red-400/10 border border-red-400/20 rounded-[5px] text-red-400 text-[0.9em]">
-          {error}
+        <div className="mb-4 p-3 bg-red-400/10 border border-red-400/20 rounded-[5px] text-red-400 text-[0.9em] flex justify-between items-start gap-3">
+          <div className="flex-1">
+            {error}
+          </div>
+          <button
+            onClick={() => {
+              setError('');
+              if (errorTimeoutRef.current) {
+                clearTimeout(errorTimeoutRef.current);
+              }
+            }}
+            className="text-red-400/70 hover:text-red-400 transition-colors text-[1.1em] leading-none flex-shrink-0"
+            title="Dismiss error"
+          >
+            ×
+          </button>
         </div>
       )}
 
@@ -221,18 +267,29 @@ function TextArea({ onSubmitPrompt, isRefining = false }) {
         <div className="flex flex-row gap-1 flex-shrink-0">
           <button
             onClick={() => handleSubmit(true)}
-            disabled={!prompt.trim() || isRefining || isModelSwitching}
-            className="bg-[#303030] p-2.5 rounded-[5px] hover:bg-white transition-all duration-150 cursor-pointer hover:text-[#282828] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#303030] disabled:hover:text-white flex items-center justify-center w-[44px] h-[44px]"
-            title={isModelSwitching ? "Please wait, switching model..." : "Refine with AI (Shift+Ctrl+Enter)"}
+            disabled={!prompt.trim() || isRefining || isModelSwitching || isLocalRefining}
+            className={`bg-[#303030] p-2.5 rounded-[5px] transition-all duration-150 cursor-pointer flex items-center justify-center w-[44px] h-[44px] ${
+              isRefining || isModelSwitching || isLocalRefining
+                ? 'opacity-70 cursor-not-allowed bg-[#404040]' 
+                : 'hover:bg-white hover:text-[#282828] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#303030] disabled:hover:text-white'
+            }`}
+            title={
+              isLocalRefining || isRefining ? "Refining prompt..." :
+              isModelSwitching ? "Please wait, switching model..." : 
+              "Refine with AI (Shift+Ctrl+Enter)"
+            }
           >
-            <PiStarFourFill className={`text-[1.3em] ${isRefining || isModelSwitching ? 'animate-spin' : ''}`} />
+            <PiStarFourFill className={`text-[1.3em] transition-transform duration-150 ${
+              isLocalRefining || isRefining ? 'animate-spin text-blue-400' : 
+              isModelSwitching ? 'animate-spin' : ''
+            }`} />
           </button>
           
           <button
             onClick={() => handleSubmit(false)}
-            disabled={!prompt.trim() || isRefining || isModelSwitching}
+            disabled={!prompt.trim() || isRefining || isModelSwitching || isLocalRefining}
             className="bg-[#303030] p-2.5 rounded-[5px] hover:bg-white transition-all duration-150 cursor-pointer hover:text-[#282828] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#303030] disabled:hover:text-white flex items-center justify-center w-[44px] h-[44px]"
-            title={isModelSwitching ? "Please wait, switching model..." : "Submit prompt (Enter)"}
+            title={isModelSwitching ? "Please wait, switching model..." : isLocalRefining || isRefining ? "Please wait, refining in progress..." : "Submit prompt (Enter)"}
           >
             <PiArrowUpBold className="text-[1.3em]" />
           </button>
