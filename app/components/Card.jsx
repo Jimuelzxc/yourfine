@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { PiCopyBold, PiCheckBold, PiSwapBold, PiBookmarkSimpleBold } from 'react-icons/pi';
+import { PiCopyBold, PiCheckBold, PiSwapBold, PiBookmarkSimpleBold, PiBrainBold, PiTargetBold } from 'react-icons/pi';
 
-function Card({ prompt, isLatest = false, isQueued = false, onDelete, onSave, onQueueForDeletion }) {
+function Card({ prompt, isLatest = false, isQueued = false, onDelete, onSave, onQueueForDeletion, semanticMode = false }) {
   const [showRefined, setShowRefined] = useState(!!prompt?.refined);
   const [copied, setCopied] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
@@ -270,6 +270,30 @@ function Card({ prompt, isLatest = false, isQueued = false, onDelete, onSave, on
 
   const displayText = showRefined && prompt.refined ? prompt.refined : prompt.original;
   const hasRefined = Boolean(prompt.refined);
+  
+  // Semantic search feedback data
+  const hasSemanticData = semanticMode && prompt._semanticScore !== undefined;
+  const semanticScore = prompt._semanticScore || 0;
+  const semanticConfidence = prompt._semanticConfidence || 'low';
+  const matchedField = prompt._matchedField || 'original';
+  const hasKeywordMatch = prompt._hasKeywordMatch || false;
+  const intentMatch = prompt._intentMatch;
+  
+  // Calculate visual indicators for semantic relevance
+  const getSemanticColor = () => {
+    if (semanticScore >= 0.7) return 'text-green-400';
+    if (semanticScore >= 0.4) return 'text-yellow-400';
+    if (semanticScore >= 0.2) return 'text-orange-400';
+    return 'text-red-400';
+  };
+  
+  const getConfidenceIndicator = () => {
+    switch (semanticConfidence) {
+      case 'high': return { color: 'bg-green-400', text: 'High relevance' };
+      case 'medium': return { color: 'bg-yellow-400', text: 'Medium relevance' };
+      default: return { color: 'bg-red-400', text: 'Low relevance' };
+    }
+  };
 
   return (
     <>
@@ -357,6 +381,40 @@ function Card({ prompt, isLatest = false, isQueued = false, onDelete, onSave, on
               )}
             </div>
             <div className="flex items-center gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* Semantic Search Indicators */}
+              {hasSemanticData && (
+                <div className="flex items-center gap-1 text-[0.7em] sm:text-[0.75em]">
+                  <div className="flex items-center gap-1">
+                    <PiBrainBold className={`${getSemanticColor()}`} title="Semantic match" />
+                    <span className={`${getSemanticColor()} font-mono`}>
+                      {(semanticScore * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  
+                  {/* Confidence indicator */}
+                  <div className={`w-1.5 h-1.5 rounded-full ${getConfidenceIndicator().color}`} 
+                       title={getConfidenceIndicator().text} />
+                  
+                  {/* Match type indicators */}
+                  {hasKeywordMatch && (
+                    <span className="text-blue-400 text-[0.6em]" title="Also matches keywords">
+                      K
+                    </span>
+                  )}
+                  
+                  {matchedField === 'refined' && (
+                    <span className="text-purple-400 text-[0.6em]" title="Matched in refined version">
+                      R
+                    </span>
+                  )}
+                  
+                  {intentMatch && intentMatch.primary !== 'general' && (
+                    <PiTargetBold className="text-purple-400 text-[0.6em]" 
+                                  title={`Intent match: ${intentMatch.primary}`} />
+                  )}
+                </div>
+              )}
+              
               {prompt?.saved && (
                 <div className="flex items-center gap-1 text-orange-400 text-[0.75em] sm:text-[0.8em]">
                   <PiBookmarkSimpleBold className="fill-current" />

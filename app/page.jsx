@@ -23,9 +23,11 @@ export default function Home() {
           handleRenameSession, handleDeleteSession, handleExportSession, 
           handleImportSession, updateSessionsList } = useSessionManagement();
   
-  const { prompts, searchQuery, showSavedOnly, filteredPrompts, searchResultsCount, 
-          savedCount, totalCount, handleAddPrompt, handleDeletePrompt, 
-          handleSavePrompt, setSearchQuery, clearSearch, toggleSavedFilter } = usePromptManagement(activeSessionId);
+  const { prompts, searchQuery, showSavedOnly, semanticMode, filteredPrompts, 
+          searchResultsCount, semanticResultsCount, savedCount, totalCount, 
+          searchSuggestions, handleAddPrompt, handleDeletePrompt, 
+          handleSavePrompt, setSearchQuery, clearSearch, toggleSavedFilter,
+          toggleSemanticMode, selectSearchSuggestion } = usePromptManagement(activeSessionId);
   
   const { deletionQueue, showBatchConfirm, queueSize, handleQueueForDeletion, 
           handleBatchDelete, executeBatchDeletion, cancelBatchDeletion, 
@@ -110,6 +112,11 @@ export default function Home() {
                 onSearchChange={setSearchQuery}
                 onClearSearch={clearSearch}
                 searchResultsCount={searchResultsCount}
+                semanticMode={semanticMode}
+                onToggleSemanticMode={toggleSemanticMode}
+                semanticResultsCount={semanticResultsCount}
+                searchSuggestions={searchSuggestions}
+                onSelectSuggestion={selectSearchSuggestion}
               />
             )}
             
@@ -133,6 +140,7 @@ export default function Home() {
               onDeletePrompt={handlePromptDelete}
               onSavePrompt={handlePromptSave}
               onQueueForDeletion={handleQueueForDeletion}
+              semanticMode={semanticMode}
             />         
           </div>
 

@@ -8,7 +8,8 @@ const PromptsList = forwardRef(({
   deletionQueue,
   onDeletePrompt,
   onSavePrompt,
-  onQueueForDeletion 
+  onQueueForDeletion,
+  semanticMode = false
 }, ref) => {
   // Check if a prompt is queued for deletion
   const isPromptQueued = (promptId) => {
@@ -57,6 +58,7 @@ const PromptsList = forwardRef(({
               onDelete={onDeletePrompt}
               onSave={onSavePrompt}
               onQueueForDeletion={onQueueForDeletion}
+              semanticMode={semanticMode}
             />
           );
         })
