@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { PiCaretDownBold, PiPlusBold, PiTrashBold, PiPencilBold, PiCheckBold, PiXBold, PiDownloadBold, PiUploadBold } from 'react-icons/pi';
+import { PiCaretDownBold, PiPlusBold, PiTrashBold, PiPencilBold, PiCheckBold, PiXBold, PiDownloadBold, PiUploadBold, PiFileCsvBold } from 'react-icons/pi';
 
 function SessionSelector({ 
   sessions, 
@@ -9,6 +9,7 @@ function SessionSelector({
   onRenameSession, 
   onDeleteSession,
   onExportSession,
+  onExportSessionCSV,
   onImportSession
 }) {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -83,6 +84,13 @@ function SessionSelector({
     e.stopPropagation();
     if (onExportSession) {
       onExportSession(sessionId);
+    }
+  };
+
+  const handleExportSessionCSV = (sessionId, e) => {
+    e.stopPropagation();
+    if (onExportSessionCSV) {
+      onExportSessionCSV(sessionId);
     }
   };
 
@@ -210,9 +218,16 @@ function SessionSelector({
                       <button
                         onClick={(e) => handleExportSession(session.id, e)}
                         className="text-gray-400 hover:text-green-400 text-[0.8em] p-1"
-                        title="Export Session"
+                        title="Export as JSON"
                       >
                         <PiDownloadBold />
+                      </button>
+                      <button
+                        onClick={(e) => handleExportSessionCSV(session.id, e)}
+                        className="text-gray-400 hover:text-blue-400 text-[0.8em] p-1"
+                        title="Export as CSV"
+                      >
+                        <PiFileCsvBold />
                       </button>
                       <button
                         onClick={(e) => handleStartEdit(session, e)}

@@ -14,6 +14,7 @@ function TextArea({
   onRenameSession,
   onDeleteSession,
   onExportSession,
+  onExportSessionCSV,
   onImportSession
 }) {
   const [prompt, setPrompt] = useState('');
@@ -186,6 +187,7 @@ function TextArea({
             onRenameSession={onRenameSession}
             onDeleteSession={onDeleteSession}
             onExportSession={onExportSession}
+            onExportSessionCSV={onExportSessionCSV}
             onImportSession={onImportSession}
           />
           

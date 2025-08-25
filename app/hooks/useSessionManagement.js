@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { 
   loadSessions, getActiveSessionId, setActiveSessionId, createSession, 
   renameSession, deleteSession, getSessionList, exportSession, 
-  importSession, migratePromptsToSessions 
+  exportSessionToCSV, importSession, migratePromptsToSessions 
 } from '../utils/localStorage';
 
 export const useSessionManagement = () => {
@@ -69,6 +69,19 @@ export const useSessionManagement = () => {
     }
   };
 
+  // Handle exporting a session as CSV
+  const handleExportSessionCSV = (sessionId) => {
+    const success = exportSessionToCSV(sessionId);
+    if (success) {
+      console.log('Session exported to CSV successfully');
+      return { success: true };
+    } else {
+      const errorMessage = 'Failed to export session to CSV. Please try again.';
+      alert(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
   // Handle exporting a session
   const handleExportSession = (sessionId) => {
     const success = exportSession(sessionId);
@@ -121,6 +134,7 @@ export const useSessionManagement = () => {
     handleRenameSession,
     handleDeleteSession,
     handleExportSession,
+    handleExportSessionCSV,
     handleImportSession,
     updateSessionsList
   };

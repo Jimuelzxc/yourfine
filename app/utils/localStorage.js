@@ -428,6 +428,97 @@ export const exportSession = (sessionId) => {
   }
 };
 
+// Export a session to CSV file
+export const exportSessionToCSV = (sessionId) => {
+  try {
+    const sessions = loadSessions();
+    const session = sessions[sessionId];
+    
+    if (!session) {
+      throw new Error(`Session ${sessionId} not found`);
+    }
+    
+    // Prepare CSV headers
+    const headers = [
+      'ID',
+      'Original Prompt',
+      'Refined Prompt',
+      'Created At',
+      'Timestamp',
+      'Saved',
+      'Has Refinement',
+      'Character Count (Original)',
+      'Character Count (Refined)',
+      'Word Count (Original)',
+      'Word Count (Refined)'
+    ];
+    
+    // Helper function to escape CSV values
+    const escapeCSV = (value) => {
+      if (value === null || value === undefined) return '';
+      const stringValue = String(value);
+      // Escape quotes and wrap in quotes if contains special characters
+      if (stringValue.includes('"') || stringValue.includes(',') || stringValue.includes('\n') || stringValue.includes('\r')) {
+        return '"' + stringValue.replace(/"/g, '""') + '"';
+      }
+      return stringValue;
+    };
+    
+    // Helper function to count words
+    const countWords = (text) => {
+      if (!text) return 0;
+      return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+    };
+    
+    // Convert prompts to CSV rows
+    const csvRows = session.prompts.map(prompt => {
+      return [
+        escapeCSV(prompt.id),
+        escapeCSV(prompt.original || ''),
+        escapeCSV(prompt.refined || ''),
+        escapeCSV(prompt.createdAt || ''),
+        escapeCSV(prompt.timestamp || ''),
+        escapeCSV(prompt.saved ? 'Yes' : 'No'),
+        escapeCSV(prompt.refined ? 'Yes' : 'No'),
+        escapeCSV(prompt.original ? prompt.original.length : 0),
+        escapeCSV(prompt.refined ? prompt.refined.length : 0),
+        escapeCSV(countWords(prompt.original)),
+        escapeCSV(countWords(prompt.refined))
+      ].join(',');
+    });
+    
+    // Combine headers and data
+    const csvContent = [headers.join(','), ...csvRows].join('\n');
+    
+    // Add UTF-8 BOM for better Excel compatibility
+    const BOM = '\uFEFF';
+    const csvWithBOM = BOM + csvContent;
+    
+    // Create and download file
+    const blob = new Blob([csvWithBOM], {
+      type: 'text/csv;charset=utf-8;'
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Generate filename with session name and timestamp
+    const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const sessionName = session.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    link.download = `${sessionName}_prompts_${timestamp}.csv`;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    return true;
+  } catch (error) {
+    console.error('Error exporting session to CSV:', error);
+    return false;
+  }
+};
+
 // Import a session from JSON file
 export const importSession = (file) => {
   return new Promise((resolve, reject) => {
