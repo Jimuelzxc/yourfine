@@ -15,7 +15,7 @@ With yourfine, you can:
 ## Key Features
 
 ### 🧠 AI-Powered Refinement
-Turn rough ideas into polished prompts with a single click. yourfine integrates with leading AI models to help you refine your prompts automatically.
+Turn rough ideas into polished prompts (especially helpful for non-English speakers) with a single click. yourfine integrates with leading AI models to help you refine your prompts automatically.
 
 ### 🌍 Multilingual Support
 Write prompts in your native language and use AI to translate and refine them into English. Perfect for non-English speakers who want to leverage AI tools that work best in English.
