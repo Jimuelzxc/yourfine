@@ -21,7 +21,7 @@ export default function Home() {
   // Custom hooks for state management
   const { sessions, activeSessionId, handleSessionChange, handleCreateSession, 
           handleRenameSession, handleDeleteSession, handleExportSession, 
-          handleExportSessionCSV, handleImportSession, updateSessionsList } = useSessionManagement();
+          handleImportSession, updateSessionsList } = useSessionManagement();
   
   const { prompts, searchQuery, showSavedOnly, semanticMode, filteredPrompts, 
           searchResultsCount, semanticResultsCount, savedCount, totalCount, 
@@ -154,7 +154,6 @@ export default function Home() {
             onRenameSession={handleRenameSession}
             onDeleteSession={handleDeleteSession}
             onExportSession={handleExportSession}
-            onExportSessionCSV={handleExportSessionCSV}
             onImportSession={handleImportSession}
           />
         </div>
