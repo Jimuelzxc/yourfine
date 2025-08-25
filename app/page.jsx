@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import TextArea from "./components/TextArea";
 import Settings from "./components/Settings";
 import Header from "./components/Header";
@@ -10,6 +10,7 @@ import PromptsList from "./components/PromptsList";
 import BatchDeletionBar from "./components/BatchDeletionBar";
 import ConfirmationModal from "./components/ConfirmationModal";
 import StatusIndicator from "./components/StatusIndicator";
+import AnalysisDashboard from "./components/AnalysisDashboard";
 
 // Custom hooks
 import { usePromptManagement } from "./hooks/usePromptManagement";
@@ -27,7 +28,9 @@ export default function Home() {
           searchResultsCount, semanticResultsCount, savedCount, totalCount, 
           searchSuggestions, handleAddPrompt, handleDeletePrompt, 
           handleSavePrompt, setSearchQuery, clearSearch, toggleSavedFilter,
-          toggleSemanticMode, selectSearchSuggestion } = usePromptManagement(activeSessionId);
+          toggleSemanticMode, selectSearchSuggestion, handleAnalyzePrompt,
+          handleBatchAnalyze, getAnalysisStats, getUnanalyzedPrompts,
+          getPromptsWithAnalysis } = usePromptManagement(activeSessionId);
   
   const { deletionQueue, showBatchConfirm, queueSize, handleQueueForDeletion, 
           handleBatchDelete, executeBatchDeletion, cancelBatchDeletion, 
@@ -35,6 +38,11 @@ export default function Home() {
   
   const { showSettings, isRefining, openSettings, 
           closeSettings, setRefiningState } = useUIState();
+  
+  // Analysis dashboard state
+  const [showAnalysisDashboard, setShowAnalysisDashboard] = useState(false);
+  const analysisStats = getAnalysisStats();
+  const unanalyzedPrompts = getUnanalyzedPrompts();
   
   const cardsContainerRef = useRef(null);
 
@@ -128,6 +136,28 @@ export default function Home() {
                 savedCount={savedCount}
                 totalCount={totalCount}
               />
+            )}
+            
+            {/* Analysis Dashboard */}
+            {prompts.length > 0 && (
+              <div className="mb-3">
+                <button 
+                  onClick={() => setShowAnalysisDashboard(!showAnalysisDashboard)}
+                  className="w-full text-left px-3 py-2 bg-[#3a3a3a] hover:bg-[#404040] border border-[#424242] rounded-md text-white text-sm transition-colors"
+                >
+                  AI Analysis Dashboard {showAnalysisDashboard ? '▼' : '▶'}
+                </button>
+                {showAnalysisDashboard && (
+                  <div className="mt-2">
+                    <AnalysisDashboard 
+                      analysisStats={analysisStats}
+                      onAnalyzePrompt={handleAnalyzePrompt}
+                      onBatchAnalyze={handleBatchAnalyze}
+                      unanalyzedPrompts={unanalyzedPrompts}
+                    />
+                  </div>
+                )}
+              </div>
             )}
             
             {/* Prompts List */}

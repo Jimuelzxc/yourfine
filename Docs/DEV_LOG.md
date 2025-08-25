@@ -38,6 +38,9 @@ This document outlines the rules for interacting with my development log. Please
 - When the user clicks 'Refine,' a new card should appear. This card should initially display a skeleton loader to indicate its loading state.
 - Allow Markdown formatting in cards.
 - Enable users to bookmark preferred prompts.
+- framer-motion for advanced animations
+- Auto-categorization: Group by topic, date, type
+
 
 
 ## General Notes

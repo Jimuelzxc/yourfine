@@ -7,7 +7,7 @@
 * **Zustand** see `Docs/ZUSTAND.md`
 * **LocalStorage**
 * **UUID**
-* **LLM APIs** → see `Docs/GEMINI.md, Docs/OPENROUTER.md`
+* **LLM APIs** → see for DOCUMENTATION `Docs/GEMINI.md, Docs/OPENROUTER.md`
 
 ## Context about the app
 see `Docs/IDEAS.md`
