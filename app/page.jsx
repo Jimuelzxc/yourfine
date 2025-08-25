@@ -365,7 +365,7 @@ export default function Home() {
             <div
               ref={cardsContainerRef}
               id="cards"
-              className="w-full flex flex-col gap-3  h-[340px]  md:h-[520px] overflow-y-scroll pb-2 pt-2 relative"
+              className="w-full flex flex-col gap-3  h-[220px]  md:h-[520px] overflow-y-scroll pb-2 pt-2 relative"
             >
               {filteredPrompts.length === 0 ? (
                 // Empty state
