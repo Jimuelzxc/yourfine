@@ -34,6 +34,26 @@ function TextArea({
     }
   }, []);
 
+  // Listen for settings updates via custom event
+  useEffect(() => {
+    const handleSettingsUpdate = () => {
+      const savedApiKey = loadApiKey();
+      const savedModel = loadSelectedModel();
+      setApiKey(savedApiKey);
+      
+      if (savedModel) {
+        setSelectedModel(savedModel);
+      }
+    };
+
+    // Listen for custom settings update event
+    window.addEventListener('yourfine-settings-updated', handleSettingsUpdate);
+
+    return () => {
+      window.removeEventListener('yourfine-settings-updated', handleSettingsUpdate);
+    };
+  }, []);
+
   // Auto-dismiss errors after 7 seconds
   useEffect(() => {
     if (error) {

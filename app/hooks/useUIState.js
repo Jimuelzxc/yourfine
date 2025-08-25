@@ -2,7 +2,6 @@ import { useState } from 'react';
 
 export const useUIState = () => {
   const [showSettings, setShowSettings] = useState(false);
-  const [settingsUpdateKey, setSettingsUpdateKey] = useState(0);
   const [isRefining, setIsRefining] = useState(false);
 
   // Handle opening settings
@@ -13,8 +12,7 @@ export const useUIState = () => {
   // Handle closing settings
   const closeSettings = () => {
     setShowSettings(false);
-    // Trigger TextArea refresh by updating key
-    setSettingsUpdateKey(prev => prev + 1);
+    // No need to force TextArea remount - it will pick up localStorage changes naturally
   };
 
   // Handle setting refining state
@@ -25,7 +23,6 @@ export const useUIState = () => {
   return {
     // State
     showSettings,
-    settingsUpdateKey,
     isRefining,
     
     // Actions

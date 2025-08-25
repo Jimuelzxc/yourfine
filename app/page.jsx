@@ -31,7 +31,7 @@ export default function Home() {
           handleBatchDelete, executeBatchDeletion, cancelBatchDeletion, 
           clearDeletionQueue } = useBatchDeletion();
   
-  const { showSettings, settingsUpdateKey, isRefining, openSettings, 
+  const { showSettings, isRefining, openSettings, 
           closeSettings, setRefiningState } = useUIState();
   
   const cardsContainerRef = useRef(null);
@@ -137,7 +137,6 @@ export default function Home() {
           </div>
 
           <TextArea 
-            key={settingsUpdateKey}
             onSubmitPrompt={handleSubmitPrompt}
             isRefining={isRefining}
             sessions={sessions}

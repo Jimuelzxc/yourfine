@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { PiXBold, PiCheckBold, PiWarningBold, PiCaretDownBold } from 'react-icons/pi';
+import { PiXBold, PiCheckBold, PiWarningBold, PiCaretDownBold, PiPlayBold, PiPauseBold, PiSpeakerHighBold, PiSpeakerSlashBold } from 'react-icons/pi';
 import { loadApiKey, saveApiKey, loadSelectedModel, saveSelectedModel } from '../utils/localStorage';
 import { AVAILABLE_MODELS, getAllModels, validateApiKey } from '../utils/api';
+import { useAmbientSounds } from '../hooks/useAmbientSounds';
 
 function Settings({ isOpen, onClose }) {
   const [apiKey, setApiKey] = useState('');
@@ -11,6 +12,20 @@ function Settings({ isOpen, onClose }) {
   const [error, setError] = useState('');
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const dropdownRef = useRef(null);
+
+  // Ambient sounds hook
+  const {
+    selectedSound,
+    volume,
+    isPlaying,
+    isEnabled,
+    isLoading,
+    error: soundError,
+    availableSounds,
+    handleSoundSelect,
+    handleVolumeChange,
+    toggleEnabled
+  } = useAmbientSounds();
 
   useEffect(() => {
     if (isOpen) {
@@ -49,6 +64,9 @@ function Settings({ isOpen, onClose }) {
     setValidationStatus(null);
     setError('');
     saveApiKey(newApiKey);
+    
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('yourfine-settings-updated'));
   };
 
   const handleModelSelect = (model) => {
@@ -56,6 +74,9 @@ function Settings({ isOpen, onClose }) {
     saveSelectedModel(model);
     setValidationStatus(null); // Reset validation when model changes
     setShowModelDropdown(false); // Close dropdown after selection
+    
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('yourfine-settings-updated'));
   };
 
   const handleValidateApiKey = async () => {
@@ -224,6 +245,99 @@ function Settings({ isOpen, onClose }) {
                   API key is valid and working!
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Ambient Sounds */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-[1em] font-medium text-white">Ambient Sounds</label>
+              <button
+                onClick={toggleEnabled}
+                className={`flex items-center gap-2 px-3 py-1 rounded-[5px] text-[0.8em] transition-colors ${
+                  isEnabled 
+                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                    : 'bg-[#404040] text-gray-400 border border-[#505050]'
+                }`}
+              >
+                {isEnabled ? <PiSpeakerHighBold /> : <PiSpeakerSlashBold />}
+                {isEnabled ? 'On' : 'Off'}
+              </button>
+            </div>
+            
+            {/* Sound Selection Grid */}
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              {availableSounds.map((sound) => (
+                <button
+                  key={sound.id}
+                  onClick={() => handleSoundSelect(sound)}
+                  disabled={!isEnabled}
+                  className={`p-3 rounded-[5px] border transition-all text-left ${
+                    selectedSound.id === sound.id
+                      ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
+                      : 'bg-[#353535] border-[#505050] text-white hover:bg-[#404040] hover:border-[#606060]'
+                  } ${!isEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[1.2em]">{sound.icon}</span>
+                    <span className="text-[0.9em] font-medium">{sound.name}</span>
+                  </div>
+                  <div className="text-[0.7em] opacity-70">{sound.description}</div>
+                </button>
+              ))}
+            </div>
+            
+            {/* Volume Control */}
+            {isEnabled && selectedSound.id !== 'none' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[0.9em] text-white">Volume</span>
+                  <div className="flex items-center gap-2">
+                    {isLoading && (
+                      <div className="text-[0.8em] text-blue-400">Loading...</div>
+                    )}
+                    {isPlaying && (
+                      <PiPlayBold className="text-green-400" />
+                    )}
+                    <span className="text-[0.8em] text-gray-400 min-w-[3em] text-right">
+                      {Math.round(volume * 100)}%
+                    </span>
+                  </div>
+                </div>
+                
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={volume}
+                  onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-[#404040] rounded-lg appearance-none cursor-pointer slider"
+                  style={{
+                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${volume * 100}%, #404040 ${volume * 100}%, #404040 100%)`
+                  }}
+                />
+              </div>
+            )}
+            
+            {/* Sound Error */}
+            {soundError && (
+              <div className="text-red-400 text-[0.8em] bg-red-400/10 border border-red-400/20 rounded p-2 mt-3">
+                {soundError}
+              </div>
+            )}
+            
+            {/* Sound Info */}
+            <div className="bg-[#353535] border border-[#505050] rounded-[5px] p-3 mt-3">
+              <div className="text-[0.8em] opacity-80 text-gray-300">
+                {isEnabled ? (
+                  selectedSound.id === 'none' 
+                    ? 'Select a sound above to enhance your focus while crafting prompts.'
+                    : `Playing ${selectedSound.name} to help you concentrate.`
+                ) : (
+                  'Turn on ambient sounds to create a focused environment for prompt crafting.'
+                )}
+              </div>
             </div>
           </div>
 
