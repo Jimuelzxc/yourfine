@@ -256,9 +256,9 @@ export default function Home() {
     <div className="h-screen flex flex-col bg-[#282828]">
       {/* Navigation Header */}
       <div className="">
-        <div className="wrapper flex justify-between items-center py-[40px] px-4 sm:px-8 md:px-16 lg:px-32 xl:px-[550px] mx-4">
+        <div className="wrapper flex justify-between items-center py-[30px] px-4 sm:px-8 md:px-16 lg:px-32 xl:px-[550px] mx-2 md:mx-4 lg:mx-4">
           <div className="flex items-center gap-2 sm:gap-4">
-            <h1 className="text-[1.2em] sm:text-[1.5em] z-20 flex items-center">rfine</h1>
+            <h1 className="text-[1.2em] sm:text-[1.5em] z-20 flex items-center">yourfine</h1>
           </div>
           
           {/* Settings Button */}
@@ -273,7 +273,7 @@ export default function Home() {
       </div>
       
       <div className="flex-1">
-        <div className="mx-4 sm:mx-8 md:mx-16 lg:mx-32 xl:mx-[550px] flex flex-col items-center gap-4 h-full px-4">
+        <div className=" mx-2 sm:mx-8 md:mx-16 lg:mx-32 xl:mx-[550px] flex flex-col items-center gap-4 h-full px-4">
           <div className="w-full relative" id="wrapper-cards">
             {/* Batch Deletion Queue UI */}
             {deletionQueue.size > 0 && (
@@ -356,7 +356,7 @@ export default function Home() {
                   </button>
                 </div>
                 
-                <div className="text-[0.8em] sm:text-[0.9em] opacity-70 px-2 sm:px-3 py-1">
+                <div className="text-[0.8em] sm:text-[0.9em] opacity-70 px-1 py-1">
                   {showSavedOnly ? savedCount : prompts.length} prompt{(showSavedOnly ? savedCount : prompts.length) !== 1 ? 's' : ''}
                 </div>
               </div>
@@ -365,7 +365,7 @@ export default function Home() {
             <div
               ref={cardsContainerRef}
               id="cards"
-              className="w-full flex flex-col gap-3 h-[200px] sm:h-[400px] md:h-[400px] overflow-y-scroll pb-2 pt-2 relative"
+              className="w-full flex flex-col gap-3  h-[340px]  md:h-[520px] overflow-y-scroll pb-2 pt-2 relative"
             >
               {filteredPrompts.length === 0 ? (
                 // Empty state
