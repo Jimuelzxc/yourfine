@@ -188,9 +188,9 @@ function SessionSelector({
                 </div>
               ) : (
                 // Display mode
-                <button
+                <div
                   onClick={() => handleSessionSelect(session.id)}
-                  className="w-full text-left px-3 py-2 transition-colors"
+                  className="w-full text-left px-3 py-2 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
@@ -230,7 +230,7 @@ function SessionSelector({
                       </button>
                     </div>
                   </div>
-                </button>
+                </div>
               )}
             </div>
           ))}
