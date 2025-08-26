@@ -2,8 +2,6 @@
 
 A smart prompt library and refinement tool that helps you turn messy ideas into polished prompts.
 
-![yourfine Screenshot](./public/screenshot.png)
-
 ## Why your fine?
 
 yourfine is an open-source web app designed for anyone who works with AI prompts. It solves a simple but common problem: great prompt ideas often start messy, and it's easy to lose track of your best versions.
