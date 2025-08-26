@@ -75,7 +75,8 @@ export const addPrompt = (originalPrompt, refinedPrompt = null) => {
       minute: '2-digit',
       second: '2-digit',
       hour12: true
-    })
+    }),
+    analysis: null // AI analysis data will be stored here
   };
   
   const updatedPrompts = [newPrompt, ...prompts];
@@ -382,6 +383,134 @@ export const getSessionList = () => {
     if (b.id === 'default') return 1;
     return new Date(b.lastModified) - new Date(a.lastModified);
   });
+};
+
+// === SESSION EXPORT/IMPORT FUNCTIONS ===
+
+// === PROMPT ANALYSIS FUNCTIONS ===
+
+/**
+ * Update prompt analysis data in a specific session
+ * @param {string} sessionId - Session ID
+ * @param {string} promptId - Prompt ID
+ * @param {Object} analysisData - Analysis data from AI
+ * @returns {Array|null} Updated prompts array or null if error
+ */
+export const updatePromptAnalysis = (sessionId, promptId, analysisData) => {
+  const sessions = loadSessions();
+  
+  if (!sessions[sessionId]) {
+    console.error(`Session ${sessionId} not found`);
+    return null;
+  }
+  
+  const promptIndex = sessions[sessionId].prompts.findIndex(prompt => prompt.id === promptId);
+  if (promptIndex === -1) {
+    console.error(`Prompt ${promptId} not found in session ${sessionId}`);
+    return null;
+  }
+  
+  // Update the analysis data
+  sessions[sessionId].prompts[promptIndex].analysis = {
+    ...analysisData,
+    analyzedAt: new Date().toISOString()
+  };
+  
+  sessions[sessionId].lastModified = new Date().toISOString();
+  saveSessions(sessions);
+  
+  return sessions[sessionId].prompts;
+};
+
+/**
+ * Get prompts that need analysis (have no analysis data)
+ * @param {string} sessionId - Session ID
+ * @returns {Array} Array of prompts without analysis
+ */
+export const getPromptsNeedingAnalysis = (sessionId) => {
+  const sessions = loadSessions();
+  
+  if (!sessions[sessionId]) {
+    return [];
+  }
+  
+  return sessions[sessionId].prompts.filter(prompt => !prompt.analysis);
+};
+
+/**
+ * Get prompts with analysis results
+ * @param {string} sessionId - Session ID 
+ * @returns {Array} Array of prompts with analysis data
+ */
+export const getAnalyzedPrompts = (sessionId) => {
+  const sessions = loadSessions();
+  
+  if (!sessions[sessionId]) {
+    return [];
+  }
+  
+  return sessions[sessionId].prompts.filter(prompt => prompt.analysis);
+};
+
+/**
+ * Get analysis summary for a session
+ * @param {string} sessionId - Session ID
+ * @returns {Object} Analysis summary statistics
+ */
+export const getAnalysisSummary = (sessionId) => {
+  const sessions = loadSessions();
+  
+  if (!sessions[sessionId]) {
+    return {
+      totalPrompts: 0,
+      analyzedPrompts: 0,
+      pendingAnalysis: 0,
+      averageQuality: 0,
+      averageApplicability: 0,
+      usefulPrompts: 0,
+      riskyPrompts: 0
+    };
+  }
+  
+  const prompts = sessions[sessionId].prompts;
+  const analyzedPrompts = prompts.filter(p => p.analysis);
+  
+  const totalPrompts = prompts.length;
+  const analyzedCount = analyzedPrompts.length;
+  const pendingAnalysis = totalPrompts - analyzedCount;
+  
+  if (analyzedCount === 0) {
+    return {
+      totalPrompts,
+      analyzedPrompts: analyzedCount,
+      pendingAnalysis,
+      averageQuality: 0,
+      averageApplicability: 0,
+      usefulPrompts: 0,
+      riskyPrompts: 0
+    };
+  }
+  
+  const averageQuality = analyzedPrompts.reduce((sum, p) => sum + (p.analysis.qualityScore || 0), 0) / analyzedCount;
+  const averageApplicability = analyzedPrompts.reduce((sum, p) => sum + (p.analysis.futureApplicability || 0), 0) / analyzedCount;
+  const usefulPrompts = analyzedPrompts.filter(p => 
+    (p.analysis.qualityScore || 0) >= 0.7 && 
+    (p.analysis.futureApplicability || 0) >= 0.7
+  ).length;
+  const riskyPrompts = analyzedPrompts.filter(p => 
+    (p.analysis.futureApplicability || 0) < 0.4 ||
+    (p.analysis.riskFactors && p.analysis.riskFactors.length > 0)
+  ).length;
+  
+  return {
+    totalPrompts,
+    analyzedPrompts: analyzedCount,
+    pendingAnalysis,
+    averageQuality: Math.round(averageQuality * 100) / 100,
+    averageApplicability: Math.round(averageApplicability * 100) / 100,
+    usefulPrompts,
+    riskyPrompts
+  };
 };
 
 // === SESSION EXPORT/IMPORT FUNCTIONS ===

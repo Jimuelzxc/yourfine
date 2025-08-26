@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { PiCopyBold, PiCheckBold, PiSwapBold, PiBookmarkSimpleBold, PiBrainBold, PiTargetBold } from 'react-icons/pi';
+import React, { useState, useRef, useEffect } from 'react';
+import { PiCopyBold, PiCheckBold, PiSwapBold, PiBookmarkSimpleBold, PiBrainBold, PiTargetBold, PiWarningCircleBold, PiStarBold, PiClockBold, PiLightbulbBold } from 'react-icons/pi';
 
 function Card({ prompt, isLatest = false, isQueued = false, onDelete, onSave, onQueueForDeletion, semanticMode = false }) {
   const [showRefined, setShowRefined] = useState(!!prompt?.refined);
@@ -279,6 +279,39 @@ function Card({ prompt, isLatest = false, isQueued = false, onDelete, onSave, on
   const hasKeywordMatch = prompt._hasKeywordMatch || false;
   const intentMatch = prompt._intentMatch;
   
+  // AI Analysis data
+  const hasAnalysis = Boolean(prompt.analysis);
+  const analysis = prompt.analysis || {};
+  const qualityScore = analysis.qualityScore || 0;
+  const futureApplicability = analysis.futureApplicability || 0;
+  const usefulnessRating = analysis.usefulnessRating || 'unknown';
+  const riskFactors = analysis.riskFactors || [];
+  const hasRisks = riskFactors.length > 0;
+  
+  // Calculate visual indicators for analysis
+  const getQualityColor = () => {
+    if (qualityScore >= 0.8) return 'text-green-400';
+    if (qualityScore >= 0.6) return 'text-yellow-400';
+    if (qualityScore >= 0.4) return 'text-orange-400';
+    return 'text-red-400';
+  };
+  
+  const getApplicabilityColor = () => {
+    if (futureApplicability >= 0.8) return 'text-green-400';
+    if (futureApplicability >= 0.6) return 'text-yellow-400';
+    if (futureApplicability >= 0.4) return 'text-orange-400';
+    return 'text-red-400';
+  };
+  
+  const getUsefulnessIndicator = () => {
+    switch (usefulnessRating) {
+      case 'high': return { color: 'text-green-400', icon: PiStarBold, text: 'High usefulness' };
+      case 'medium': return { color: 'text-yellow-400', icon: PiLightbulbBold, text: 'Medium usefulness' };
+      case 'low': return { color: 'text-red-400', icon: PiWarningCircleBold, text: 'Low usefulness' };
+      default: return { color: 'text-gray-400', icon: PiClockBold, text: 'Not analyzed' };
+    }
+  };
+  
   // Calculate visual indicators for semantic relevance
   const getSemanticColor = () => {
     if (semanticScore >= 0.7) return 'text-green-400';
@@ -381,6 +414,48 @@ function Card({ prompt, isLatest = false, isQueued = false, onDelete, onSave, on
               )}
             </div>
             <div className="flex items-center gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* AI Analysis Indicators */}
+              {hasAnalysis && (
+                <div className="flex items-center gap-1 text-[0.7em] sm:text-[0.75em]">
+                  {/* Quality Score */}
+                  <div className="flex items-center gap-1">
+                    <PiStarBold className={`${getQualityColor()}`} title="Quality Score" />
+                    <span className={`${getQualityColor()} font-mono`}>
+                      {(qualityScore * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  
+                  {/* Future Applicability */}
+                  <div className="flex items-center gap-1">
+                    <PiClockBold className={`${getApplicabilityColor()}`} title="Future Applicability" />
+                    <span className={`${getApplicabilityColor()} font-mono`}>
+                      {(futureApplicability * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  
+                  {/* Usefulness Rating */}
+                  <div className="flex items-center gap-1">
+                    {React.createElement(getUsefulnessIndicator().icon, {
+                      className: `${getUsefulnessIndicator().color}`,
+                      title: getUsefulnessIndicator().text
+                    })}
+                  </div>
+                  
+                  {/* Risk Warning */}
+                  {hasRisks && (
+                    <PiWarningCircleBold className="text-red-400" 
+                                         title={`Risk factors: ${riskFactors.join(', ')}`} />
+                  )}
+                  
+                  {/* Domain indicator */}
+                  {analysis.domain && analysis.domain !== 'general' && (
+                    <span className="text-purple-400 text-[0.6em]" title={`Domain: ${analysis.domain}`}>
+                      {analysis.domain.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+              )}
+              
               {/* Semantic Search Indicators */}
               {hasSemanticData && (
                 <div className="flex items-center gap-1 text-[0.7em] sm:text-[0.75em]">

@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { 
   getSessionPrompts, addPromptToSession, deletePromptFromSession, 
-  savePromptToSession, getSessionList 
+  savePromptToSession, getSessionList, updatePromptAnalysis,
+  getPromptsNeedingAnalysis, getAnalyzedPrompts, getAnalysisSummary
 } from '../utils/localStorage';
 import { semanticSearch, getSearchSuggestions } from '../utils/semanticSearch';
+import { analyzePromptWithAI, batchAnalyzePromptsWithAI } from '../utils/api';
 
 export const usePromptManagement = (activeSessionId) => {
   const [prompts, setPrompts] = useState([]);
@@ -163,6 +165,79 @@ export const usePromptManagement = (activeSessionId) => {
     setSearchQuery(suggestion);
   };
 
+  // AI Analysis Functions
+  const handleAnalyzePrompt = async (promptId, apiKey, selectedModel) => {
+    try {
+      const prompt = prompts.find(p => p.id === promptId);
+      if (!prompt) {
+        throw new Error('Prompt not found');
+      }
+      
+      const analysisText = prompt.refined || prompt.original;
+      const analysisResult = await analyzePromptWithAI(analysisText, apiKey, selectedModel);
+      
+      const updatedPrompts = updatePromptAnalysis(activeSessionId, promptId, analysisResult);
+      if (updatedPrompts) {
+        setPrompts(updatedPrompts);
+        return { success: true, analysis: analysisResult };
+      }
+      
+      return { success: false, error: 'Failed to save analysis' };
+    } catch (error) {
+      console.error('Error analyzing prompt:', error);
+      return { success: false, error: error.message };
+    }
+  };
+  
+  const handleBatchAnalyze = async (apiKey, selectedModel, onProgress = null) => {
+    try {
+      const promptsToAnalyze = getPromptsNeedingAnalysis(activeSessionId);
+      if (promptsToAnalyze.length === 0) {
+        return { success: true, message: 'All prompts already analyzed' };
+      }
+      
+      const promptTexts = promptsToAnalyze.map(p => p.refined || p.original);
+      const results = await batchAnalyzePromptsWithAI(promptTexts, apiKey, selectedModel, onProgress);
+      
+      // Update each prompt with analysis results
+      let updatedCount = 0;
+      for (let i = 0; i < results.length; i++) {
+        const result = results[i];
+        if (result.success) {
+          const promptId = promptsToAnalyze[result.index].id;
+          const updated = updatePromptAnalysis(activeSessionId, promptId, result.analysis);
+          if (updated) updatedCount++;
+        }
+      }
+      
+      // Refresh prompts from storage
+      const refreshedPrompts = getSessionPrompts(activeSessionId);
+      setPrompts(refreshedPrompts);
+      
+      return {
+        success: true,
+        analyzed: updatedCount,
+        total: promptsToAnalyze.length,
+        results
+      };
+    } catch (error) {
+      console.error('Error in batch analysis:', error);
+      return { success: false, error: error.message };
+    }
+  };
+  
+  const getAnalysisStats = () => {
+    return getAnalysisSummary(activeSessionId);
+  };
+  
+  const getUnanalyzedPrompts = () => {
+    return getPromptsNeedingAnalysis(activeSessionId);
+  };
+  
+  const getPromptsWithAnalysis = () => {
+    return getAnalyzedPrompts(activeSessionId);
+  };
+
   return {
     // State
     prompts,
@@ -181,6 +256,13 @@ export const usePromptManagement = (activeSessionId) => {
     toggleSemanticMode,
     updateSemanticThreshold,
     selectSearchSuggestion,
+    
+    // Analysis Functions
+    handleAnalyzePrompt,
+    handleBatchAnalyze,
+    getAnalysisStats,
+    getUnanalyzedPrompts,
+    getPromptsWithAnalysis,
     
     // Computed values
     searchSuggestions,
